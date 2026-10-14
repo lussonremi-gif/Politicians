@@ -1,85 +1,90 @@
 "use client";
 
 import { useState } from "react";
+import { presentCard } from "@/lib/cardArt";
 import { Photo } from "./Photo";
 import { RARITY_LABEL, formatDate, type GameCard } from "@/lib/types";
 
 /**
- * Carte à collectionner : une personnalité et une de ses citations.
- * Recto : photo, citation, nom. Verso : date, occasion, source et crédit photo.
- * Le cadre dépend de la rareté (de l'argent pour « commune » à l'irisé animé pour « mythique »).
+ * Carte à collectionner : le portrait de l'auteur, sa citation, puis le contexte au verso.
+ * Le cadre et l'anneau du portrait suivent la rareté.
  */
 export function CollectibleCard({ card, locked = false }: { card: GameCard; locked?: boolean }) {
+  const shown = presentCard(card);
   const [flipped, setFlipped] = useState(false);
-  const year = card.said_on ? card.said_on.slice(0, 4) : null;
+  const year = shown.said_on ? shown.said_on.slice(0, 4) : null;
 
   return (
     <button
       type="button"
-      className={`ccard rarity-${card.rarity} ${flipped ? "flipped" : ""} ${locked ? "locked" : ""}`}
-      style={{ ["--party" as string]: card.party_color ?? "#8d939c" }}
+      className={`ccard rarity-${shown.rarity} ${flipped ? "flipped" : ""} ${locked ? "locked" : ""}`}
+      style={{ ["--party" as string]: shown.party_color ?? "#8d939c" }}
       onClick={() => !locked && setFlipped((f) => !f)}
-      aria-label={locked ? `${card.name} : carte ${RARITY_LABEL[card.rarity].toLowerCase()} non obtenue` : `${card.name} : ${card.text}`}
+      aria-label={locked ? `${shown.name} : carte ${RARITY_LABEL[shown.rarity].toLowerCase()} non obtenue` : `${shown.name} : ${shown.text}`}
     >
       <div className="ccard-inner">
         <div className="ccard-face ccard-front">
-          <div className="ccard-photo">
-            <Photo src={card.image_url} name={card.name} />
-          </div>
+          <div className="ccard-pattern" aria-hidden />
           <div className="ccard-shine" aria-hidden />
           <div className="ccard-top">
-            <span className="ccard-rarity">{RARITY_LABEL[card.rarity]}</span>
-            {card.party_short && <span className="ccard-party">{card.party_short}</span>}
+            <span className="ccard-rarity">{RARITY_LABEL[shown.rarity]}</span>
+            {shown.party_short && <span className="ccard-party">{shown.party_short}</span>}
           </div>
           <div className="ccard-badges">
-            {card.new && <span className="new-tag">Nouvelle</span>}
-            {card.copies && card.copies > 1 ? <span className="copies-tag light">×{card.copies}</span> : null}
+            {shown.new && <span className="new-tag">Nouvelle</span>}
+            {shown.copies && shown.copies > 1 ? <span className="copies-tag light">×{shown.copies}</span> : null}
           </div>
-          <div className="ccard-body">
-            <p className="ccard-quote">{locked ? "« ? »" : `« ${card.text} »`}</p>
-            <div className="ccard-author">
-              <strong>{card.name}</strong>
-              {year && !locked && <span>{year}</span>}
-            </div>
+          <div className="ccard-portrait">
+            <Photo src={shown.image_url} name={shown.name} />
+            {locked && <div className="ccard-lock" aria-hidden>🔒</div>}
           </div>
-          {locked && <div className="ccard-lock" aria-hidden>🔒</div>}
+          <div className="ccard-nameplate">
+            <strong>{shown.name}</strong>
+            {year && !locked && <span>{year}</span>}
+          </div>
+          <p className="ccard-quote">{locked ? "Citation à découvrir" : `« ${shown.text} »`}</p>
         </div>
 
         <div className="ccard-face ccard-back">
-          <strong className="ccard-back-name">{card.name}</strong>
-          {card.role && <span className="ccard-back-role">{card.role}</span>}
+          <div className="ccard-back-head">
+            <span className="ccard-back-portrait">
+              <Photo src={shown.image_url} name={shown.name} />
+            </span>
+            <strong className="ccard-back-name">{shown.name}</strong>
+          </div>
+          {shown.role && <span className="ccard-back-role">{shown.role}</span>}
           <dl>
-            {card.said_on && (
+            {shown.said_on && (
               <>
                 <dt>Date</dt>
-                <dd>{formatDate(card.said_on)}</dd>
+                <dd>{formatDate(shown.said_on)}</dd>
               </>
             )}
-            {card.occasion && (
+            {shown.occasion && (
               <>
                 <dt>Occasion</dt>
-                <dd>{card.occasion}</dd>
+                <dd>{shown.occasion}</dd>
               </>
             )}
             <dt>Source</dt>
             <dd>
-              {card.source_url ? (
-                <a href={card.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                  {card.source_label ?? "Source d'origine"} ↗
+              {shown.source_url ? (
+                <a href={shown.source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                  {shown.source_label ?? "Source d'origine"} ↗
                 </a>
               ) : (
-                card.source_label ?? "—"
+                shown.source_label ?? "—"
               )}
             </dd>
           </dl>
-          {card.image_url && (
+          {shown.image_url && (
             <p className="ccard-credit">
-              Photo : {card.image_credit ?? "Wikimedia Commons"}
-              {card.image_license && <> · {card.image_license}</>}
-              {card.image_source_url && (
+              Photo : {shown.image_credit ?? "Wikimedia Commons"}
+              {shown.image_license && <> · {shown.image_license}</>}
+              {shown.image_source_url && (
                 <>
                   {" · "}
-                  <a href={card.image_source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                  <a href={shown.image_source_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                     source
                   </a>
                 </>

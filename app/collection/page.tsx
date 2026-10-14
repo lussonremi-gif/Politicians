@@ -6,6 +6,7 @@ import { CollectibleCard } from "@/components/CollectibleCard";
 import { Gate } from "@/components/Gate";
 import { Photo } from "@/components/Photo";
 import { errorMessage, getSupabase } from "@/lib/supabase";
+import { asRarity } from "@/lib/cardArt";
 import { RARITIES, RARITY_LABEL, RARITY_RANK, type GameCard, type Rarity } from "@/lib/types";
 
 type AlbumRow = GameCard & { copies: number; party_sort: number | null };
@@ -57,7 +58,7 @@ function Collection() {
       byPol.set(r.politician_slug, g);
     }
     const list = [...byPol.values()];
-    for (const g of list) g.cards.sort((a, b) => RARITY_RANK[b.rarity] - RARITY_RANK[a.rarity]);
+    for (const g of list) g.cards.sort((a, b) => RARITY_RANK[asRarity(b.rarity)] - RARITY_RANK[asRarity(a.rarity)]);
     // Les personnalités les plus complètes d'abord, puis par nom
     return list.sort((a, b) => b.owned - a.owned || a.name.localeCompare(b.name));
   }, [rows]);
@@ -72,13 +73,13 @@ function Collection() {
   if (!rows) return <p className="muted center">Chargement de l&apos;album…</p>;
 
   const owned = rows.filter((r) => r.copies > 0);
-  const countBy = (r: Rarity, list: AlbumRow[]) => list.filter((c) => c.rarity === r).length;
+  const countBy = (r: Rarity, list: AlbumRow[]) => list.filter((c) => asRarity(c.rarity) === r).length;
 
   const shown = groups
     .filter((g) => party === "all" || g.party_name === party || (party === "none" && !g.party_name))
     .map((g) => ({
       ...g,
-      cards: g.cards.filter((c) => (rarity === "all" || c.rarity === rarity) && (!onlyOwned || c.copies > 0)),
+      cards: g.cards.filter((c) => (rarity === "all" || asRarity(c.rarity) === rarity) && (!onlyOwned || c.copies > 0)),
     }))
     .filter((g) => g.cards.length > 0);
 

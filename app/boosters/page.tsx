@@ -29,9 +29,13 @@ function BoosterTile({
   onOpen: (b: BoosterType) => void;
 }) {
   const accent = boosterAccent(b);
-  const odds = b.weights
-    ? RARITIES.filter((r) => (b.weights?.[r] ?? 0) > 0)
-        .map((r) => `${RARITY_LABEL[r]} ${b.weights?.[r]}%`)
+  const raw = b.weights as (Partial<Record<(typeof RARITIES)[number], number>> & { uncommon?: number }) | null;
+  const folded = raw
+    ? { ...raw, common: (raw.common ?? 0) + (raw.uncommon ?? 0) }
+    : null;
+  const odds = folded
+    ? RARITIES.filter((r) => (folded[r] ?? 0) > 0)
+        .map((r) => `${RARITY_LABEL[r]} ${folded[r]}%`)
         .join(" · ")
     : `Commune ${b.weight_common}% · Rare ${b.weight_rare}% · Légendaire ${b.weight_legendary}%`;
   return (

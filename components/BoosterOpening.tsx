@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { CollectibleCard } from "./CollectibleCard";
+import { presentCard } from "@/lib/cardArt";
 import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/types";
 
 type Phase = "pack" | "charging" | "reveal" | "summary";
@@ -10,7 +11,6 @@ type Phase = "pack" | "charging" | "reveal" | "summary";
 // Durée de la « charge » du booster selon la meilleure carte qu'il contient
 const CHARGE_MS: Record<Rarity, number> = {
   common: 700,
-  uncommon: 900,
   rare: 1400,
   epic: 2000,
   legendary: 2800,
@@ -18,11 +18,10 @@ const CHARGE_MS: Record<Rarity, number> = {
 };
 
 // Étapes d'entrée en scène avant l'apparition de la carte
-const STEPS: Record<Rarity, number> = { common: 0, uncommon: 0, rare: 1, epic: 1, legendary: 3, mythic: 3 };
+const STEPS: Record<Rarity, number> = { common: 0, rare: 1, epic: 1, legendary: 3, mythic: 3 };
 
 const HINT: Record<Rarity, string> = {
   common: "Ouverture…",
-  uncommon: "Ouverture…",
   rare: "Ça brille…",
   epic: "Ça brille fort…",
   legendary: "Quelque chose de spécial se prépare…",
@@ -92,11 +91,12 @@ export function BoosterOpening({
   accent: string;
   onClose: () => void;
 }) {
+  const prepared = useMemo(() => cards.map(presentCard), [cards]);
   const ordered = useMemo(
-    () => [...cards].sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]),
-    [cards],
+    () => [...prepared].sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]),
+    [prepared],
   );
-  const best = bestRarity(cards);
+  const best = bestRarity(prepared);
   const [phase, setPhase] = useState<Phase>("pack");
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0); // étapes de l'entrée en scène d'une carte

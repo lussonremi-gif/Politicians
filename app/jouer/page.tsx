@@ -25,12 +25,12 @@ function Setup({
   busy,
 }: {
   initial: Config;
-  initialKind: PlayKind;
+  initialKind: PlayKind | null;
   onStart: (c: Config) => void;
   busy: boolean;
 }) {
   const router = useRouter();
-  const [kind, setKind] = useState<PlayKind>(initialKind);
+  const [kind, setKind] = useState<PlayKind | null>(initialKind);
   const [mode, setMode] = useState<GameMode>(initial.mode);
 
   useEffect(() => {
@@ -39,54 +39,66 @@ function Setup({
 
   function choose(next: PlayKind) {
     setKind(next);
-    router.replace(next === "duel" ? "/jouer?mode=duel" : "/jouer", { scroll: false });
+    router.replace(next === "duel" ? "/jouer?mode=duel" : "/jouer?mode=solo", { scroll: false });
+  }
+
+  function back() {
+    setKind(null);
+    router.replace("/jouer", { scroll: false });
+  }
+
+  if (!kind) {
+    return (
+      <section className="hero play-setup">
+        <div className="play-setup-head">
+          <h1 className="headline">Nouvelle partie</h1>
+          <span className="tricolor" aria-hidden />
+        </div>
+        <div className="play-setup-choices">
+          <div className="mode-grid">
+            <button className="mode-card" onClick={() => choose("solo")}>
+              <strong>Solo</strong>
+              <span>Une partie pour vous</span>
+            </button>
+            <button className="mode-card" onClick={() => choose("duel")}>
+              <strong>Duel</strong>
+              <span>1 contre 1 en temps réel, la même série pour les deux joueurs</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (
     <>
-      <section className="hero">
-        <h1 className="headline">Nouvelle partie</h1>
-        <span className="tricolor" aria-hidden />
-
-        <div className="mode-grid">
-          <button
-            className={`mode-card ${kind === "solo" ? "active" : ""}`}
-            aria-pressed={kind === "solo"}
-            onClick={() => choose("solo")}
-          >
-            <strong>Solo</strong>
-            <span>Une partie pour vous, en classique ou en chrono</span>
-          </button>
-          <button
-            className={`mode-card ${kind === "duel" ? "active" : ""}`}
-            aria-pressed={kind === "duel"}
-            onClick={() => choose("duel")}
-          >
-            <strong>Duel</strong>
-            <span>1 contre 1 en temps réel, la même série pour les deux joueurs</span>
-          </button>
+      <section className="hero play-setup">
+        <div className="play-setup-head">
+          <button className="link-btn" onClick={back}>Retour</button>
+          <h1 className="headline">{kind === "solo" ? "Solo" : "Duel"}</h1>
+          <span className="tricolor" aria-hidden />
         </div>
 
-        {kind === "solo" && (
-          <>
-            <div className="mode-grid">
-              <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
-                <strong>Classique</strong>
-                <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
-              </button>
-              <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
-                <strong>Chrono</strong>
-                <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
-              </button>
-            </div>
+        <div className="play-setup-choices">
+          <div className="mode-grid">
+            <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
+              <strong>Classique</strong>
+              <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
+            </button>
+            <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
+              <strong>Chrono</strong>
+              <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
+            </button>
+          </div>
 
+          {kind === "solo" && (
             <div className="actions">
               <button className="btn primary" disabled={busy} onClick={() => onStart({ mode })}>
                 {busy ? "Préparation…" : "Lancer la partie"}
               </button>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </section>
 
       {kind === "duel" && <DuelRoot embeddedLobby />}
@@ -94,7 +106,7 @@ function Setup({
   );
 }
 
-function Game({ initialKind }: { initialKind: PlayKind }) {
+function Game({ initialKind }: { initialKind: PlayKind | null }) {
   const { refreshProfile } = useAuth();
   const [config, setConfig] = useState<Config>({ mode: "classic" });
   const [session, setSession] = useState<string | null>(null);
@@ -289,7 +301,9 @@ function PlayRoot() {
   const params = useSearchParams();
   const inRoom = Boolean(params.get("id") || params.get("code"));
   if (inRoom) return <DuelRoot />;
-  return <Game initialKind={params.get("mode") === "duel" ? "duel" : "solo"} />;
+  const mode = params.get("mode");
+  const initialKind = mode === "duel" ? "duel" : mode === "solo" ? "solo" : null;
+  return <Game initialKind={initialKind} />;
 }
 
 export default function PlayPage() {
