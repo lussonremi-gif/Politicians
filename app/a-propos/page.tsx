@@ -25,8 +25,17 @@ export default function About() {
         <li>Série : ×1,5 dès 3 bonnes réponses d&apos;affilée, ×2 dès 5.</li>
         <li>Chaque bonne réponse ajoute la carte de la citation à votre collection.</li>
       </ul>
-      <h2>Bientôt</h2>
-      <p>Duel en temps réel entre amis, mode chrono, séries thématiques.</p>
+      <h2>Les modes de jeu</h2>
+      <ul>
+        <li><strong>Classique</strong> : 10 citations, avec le contexte après chaque réponse.</li>
+        <li><strong>Chrono</strong> : un maximum de bonnes réponses en 60 secondes.</li>
+        <li><strong>Thèmes</strong> : économie, écologie, sécurité… pour comparer les candidats sur un même sujet.</li>
+        <li>
+          <strong>Duel</strong> : 1 contre 1 en temps réel, la même série pour les deux joueurs, 15 secondes par réponse.
+          Le vainqueur gagne 200 points et une carte.
+        </li>
+        <li><strong>Amis</strong> : ajoutez vos amis avec leur code et comparez vos scores.</li>
+      </ul>
     </article>
   );
 }

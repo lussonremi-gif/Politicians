@@ -25,6 +25,14 @@ export function errorMessage(err: unknown): string {
     "empty booster": "Ce booster ne contient encore aucune carte.",
     "already answered": "Vous avez déjà répondu à cette question.",
     "not authenticated": "Connexion en cours, réessayez dans un instant.",
+    "time is up": "Temps écoulé !",
+    "duel not found": "Duel introuvable : vérifiez le code.",
+    "duel unavailable": "Ce duel a déjà commencé ou est terminé.",
+    "question closed": "Trop tard pour cette question.",
+    "friend not found": "Aucun joueur avec ce code ami.",
+    "cannot add yourself": "C'est votre propre code ami.",
+    "profiles_username_unique": "Ce pseudo est déjà pris.",
+    "username_format": "Pseudo invalide : 2 à 20 caractères (lettres, chiffres, espace, _ . -).",
   };
   for (const [k, v] of Object.entries(map)) if (raw.includes(k)) return v;
   return raw;

@@ -11,12 +11,14 @@ les points ouvrent des boosters pour compléter sa collection. Le verso de chaqu
 | Écran | Route | Contenu |
 |---|---|---|
 | Accueil | `/` | Présentation et boucle de jeu |
-| Partie | `/jouer` | 10 citations, deux propositions, révélation du contexte, points, séries |
+| Partie | `/jouer` | Choix du mode (classique 10 citations ou chrono 60 s) et du thème, contexte après chaque réponse |
+| Duel | `/duel` | Créer un duel (code + lien à partager), rejoindre, partie en temps réel, résultat, historique |
+| Amis | `/amis` | Pseudo, code ami, ajout d'amis, classement entre amis |
 | Collection | `/collection` | Cartes possédées, progression par rareté, filtre par personnalité, verso au clic |
 | Boosters | `/boosters` | Classique, premium, thématiques et par candidat, ouverture animée |
 | À propos / Méthodologie | `/a-propos`, `/methodologie` | Règles du jeu et règles éditoriales |
 
-Pas encore fait : duel en temps réel, mode chrono, défi entre amis, comptes avec e-mail.
+Pas encore fait : comptes avec e-mail (la partie invitée est liée au navigateur), défi asynchrone entre amis.
 
 ## Backend Supabase
 

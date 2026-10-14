@@ -1,38 +1,110 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import { Countdown } from "@/components/Countdown";
 import { Gate } from "@/components/Gate";
-import { Portrait } from "@/components/Portrait";
 import { QuoteCard } from "@/components/QuoteCard";
+import { QuoteDuel } from "@/components/QuoteDuel";
 import { errorMessage, getSupabase } from "@/lib/supabase";
-import { formatDate, type AnswerResult, type Question } from "@/lib/types";
+import { formatDate, type AnswerResult, type GameMode, type Question, type Theme } from "@/lib/types";
 
 const QUESTIONS_PER_GAME = 10;
+const CHRONO_SECONDS = 60;
+
+type Config = { mode: GameMode; theme: string | null };
+
+function Setup({ initial, onStart, busy }: { initial: Config; onStart: (c: Config) => void; busy: boolean }) {
+  const [mode, setMode] = useState<GameMode>(initial.mode);
+  const [theme, setTheme] = useState<string | null>(initial.theme);
+  const [themes, setThemes] = useState<Theme[]>([]);
+
+  useEffect(() => {
+    getSupabase()
+      .rpc("list_themes")
+      .then(({ data }) => setThemes((data as Theme[]) ?? []));
+  }, []);
+
+  return (
+    <section className="hero">
+      <h1 className="headline">Nouvelle partie</h1>
+      <span className="tricolor" aria-hidden />
+
+      <div className="mode-grid">
+        <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
+          <strong>Classique</strong>
+          <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
+        </button>
+        <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
+          <strong>Chrono</strong>
+          <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
+        </button>
+      </div>
+
+      <h2 className="sub">Thème</h2>
+      <div className="chips">
+        <button className={theme === null ? "chip active" : "chip"} onClick={() => setTheme(null)}>
+          Tous les thèmes
+        </button>
+        {themes.map((t) => (
+          <button
+            key={t.theme}
+            className={theme === t.theme ? "chip active capitalize" : "chip capitalize"}
+            onClick={() => setTheme(t.theme)}
+          >
+            {t.theme} <small>{t.quote_count}</small>
+          </button>
+        ))}
+      </div>
+
+      <div className="actions">
+        <button className="btn primary" disabled={busy} onClick={() => onStart({ mode, theme })}>
+          {busy ? "Préparation…" : "Lancer la partie"}
+        </button>
+      </div>
+    </section>
+  );
+}
 
 function Game() {
   const { refreshProfile } = useAuth();
+  const [config, setConfig] = useState<Config>({ mode: "classic", theme: null });
   const [session, setSession] = useState<string | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
   const [result, setResult] = useState<AnswerResult | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadNext = useCallback(async (sessionId: string) => {
-    const { data, error } = await getSupabase().rpc("next_question", { p_session: sessionId });
-    if (error) throw error;
-    setQuestion(data as Question);
-    setResult(null);
-    setChosen(null);
+  useEffect(() => () => {
+    if (advanceTimer.current) clearTimeout(advanceTimer.current);
   }, []);
 
-  const start = useCallback(async () => {
+  const loadNext = useCallback(async (sessionId: string) => {
+    try {
+      const { data, error } = await getSupabase().rpc("next_question", { p_session: sessionId });
+      if (error) throw error;
+      setQuestion(data as Question);
+      setResult(null);
+      setChosen(null);
+      if ((data as Question).done) refreshProfile();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }, [refreshProfile]);
+
+  const start = useCallback(async (c: Config) => {
+    setConfig(c);
     setBusy(true);
     setError(null);
     try {
-      const { data, error } = await getSupabase().rpc("start_game", { p_question_count: QUESTIONS_PER_GAME });
+      const { data, error } = await getSupabase().rpc("start_game", {
+        p_question_count: QUESTIONS_PER_GAME,
+        p_theme: c.theme,
+        p_mode: c.mode,
+      });
       if (error) throw error;
       setSession(data as string);
       await loadNext(data as string);
@@ -43,12 +115,15 @@ function Game() {
     }
   }, [loadNext]);
 
-  useEffect(() => {
-    start();
-  }, [start]);
+  function backToSetup() {
+    setSession(null);
+    setQuestion(null);
+    setResult(null);
+    setError(null);
+  }
 
   async function answer(optionId: string) {
-    if (!question || question.done || result || busy) return;
+    if (!session || !question || question.done || result || busy) return;
     setBusy(true);
     setChosen(optionId);
     try {
@@ -57,10 +132,18 @@ function Game() {
         p_choice: optionId,
       });
       if (error) throw error;
-      setResult(data as AnswerResult);
-      refreshProfile();
+      const res = data as AnswerResult;
+      setResult(res);
+      // En chrono, on enchaîne sans s'arrêter sur le contexte
+      if (question.mode === "chrono") {
+        advanceTimer.current = setTimeout(() => loadNext(session), 700);
+      } else {
+        refreshProfile();
+      }
     } catch (e) {
-      setError(errorMessage(e));
+      const msg = errorMessage(e);
+      if (msg === "Temps écoulé !") await loadNext(session);
+      else setError(msg);
     } finally {
       setBusy(false);
     }
@@ -70,81 +153,68 @@ function Game() {
     return (
       <div className="center">
         <p className="notice error">{error}</p>
-        <button className="btn" onClick={start}>Réessayer</button>
+        <button className="btn" onClick={backToSetup}>Retour</button>
       </div>
     );
   }
-  if (!question || !session) return <p className="muted center">Préparation de la partie…</p>;
+
+  if (!session || !question) return <Setup initial={config} onStart={start} busy={busy} />;
 
   if (question.done) {
+    const chrono = question.mode === "chrono";
     return (
       <section className="hero">
-        <h1 className="headline">Partie terminée</h1>
+        <h1 className="headline">{chrono ? "Temps écoulé !" : "Partie terminée"}</h1>
         <span className="tricolor" aria-hidden />
         <div className="stats">
-          <div><strong>{question.correct}/{question.total}</strong><span>bonnes réponses</span></div>
+          <div>
+            <strong>{question.correct}{chrono ? "" : `/${question.total}`}</strong>
+            <span>bonnes réponses{chrono ? ` sur ${question.total}` : ""}</span>
+          </div>
           <div><strong>{question.score.toLocaleString("fr-FR")}</strong><span>points gagnés</span></div>
           <div><strong>{question.max_streak}</strong><span>meilleure série</span></div>
         </div>
         <div className="actions">
-          <button className="btn primary" onClick={start} disabled={busy}>Rejouer</button>
+          <button className="btn primary" onClick={() => start(config)} disabled={busy}>Rejouer</button>
+          <button className="btn" onClick={backToSetup}>Changer de mode</button>
           <Link href="/boosters" className="btn">Ouvrir un booster</Link>
-          <Link href="/collection" className="btn">Ma collection</Link>
         </div>
       </section>
     );
   }
 
-  const [a, b] = question.options;
-  const stateOf = (id: string) => {
-    if (!result) return "";
-    if (id === result.answer_id) return "is-right";
-    if (id === chosen) return "is-wrong";
-    return "is-dim";
-  };
+  const chrono = question.mode === "chrono";
+  const streak = result?.streak ?? question.streak;
 
   return (
     <section className="game">
       <div className="game-status">
-        <span>Question {question.position}/{question.total}</span>
+        <span>{chrono ? `Chrono · question ${question.position}` : `Question ${question.position}/${question.total}`}</span>
         <span>{(result ? question.score + result.points : question.score).toLocaleString("fr-FR")} pts</span>
-        <span className={(result?.streak ?? question.streak) >= 3 ? "streak hot" : "streak"}>
-          Série : {result?.streak ?? question.streak}
-        </span>
+        <span className={streak >= 3 ? "streak hot" : "streak"}>Série : {streak}</span>
+        {config.theme && <span className="capitalize">Thème : {config.theme}</span>}
       </div>
+      {chrono && question.ends_at && (
+        <Countdown until={question.ends_at} totalSeconds={CHRONO_SECONDS} onEnd={() => loadNext(session)} />
+      )}
 
-      <div className="quote-glyph" aria-hidden>“</div>
-      <blockquote className="headline quote">« {question.quote} »</blockquote>
-      <span className="tricolor" aria-hidden />
-      {question.is_demo && <p className="demo-banner">Citation fictive de démonstration</p>}
+      <QuoteDuel
+        quote={question.quote}
+        isDemo={question.is_demo}
+        options={question.options}
+        answerId={result?.answer_id}
+        chosenId={chosen}
+        disabled={!!result || busy}
+        onPick={answer}
+      />
 
-      <div className="duel">
-        {[a, b].map((opt, i) => [
-          i === 1 && (
-            <div key="or" className="duel-or" aria-hidden>
-              <span className="bar" />
-              ou
-              <span className="bar" />
-            </div>
-          ),
-          <button
-            key={opt.id}
-            className={`person-card ${stateOf(opt.id)}`}
-            onClick={() => answer(opt.id)}
-            disabled={!!result || busy}
-          >
-            <div className="person-photo">
-              <Portrait person={opt} />
-            </div>
-            <div className="person-name">
-              {opt.name}
-              {opt.description && <small>{opt.description}</small>}
-            </div>
-          </button>,
-        ])}
-      </div>
+      {result && chrono && (
+        <p className={`flash ${result.correct ? "ok" : "ko"}`}>
+          {result.correct ? `+${result.points} pts` : `Raté : ${result.card.author}`}
+        </p>
+      )}
 
-      {result && (
+      {result && !chrono && (
         <div className={`reveal ${result.correct ? "ok" : "ko"}`}>
           <div className="reveal-text">
             <h2>{result.correct ? "Bonne réponse !" : "Raté…"}</h2>

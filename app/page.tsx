@@ -14,6 +14,9 @@ export default function Home() {
         <Link href="/jouer" className="btn primary">
           Jouer une partie
         </Link>
+        <Link href="/duel" className="btn">
+          Défier un ami
+        </Link>
         <Link href="/collection" className="btn">
           Ma collection
         </Link>
@@ -27,7 +30,7 @@ export default function Home() {
         <li><strong>Apprendre</strong><span>Date, occasion, source</span></li>
       </ol>
 
-      <p className="muted small-text">Duel en temps réel entre amis : bientôt.</p>
+      <p className="muted small-text">Modes classique et chrono, séries par thème, duels en temps réel et classement entre amis.</p>
     </section>
   );
 }
