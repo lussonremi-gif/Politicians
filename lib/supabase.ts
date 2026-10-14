@@ -1,8 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Projet Supabase « Politicians ». L'URL et la clé publishable sont publiques par nature
+// (elles sont envoyées à chaque navigateur) : la sécurité repose sur la RLS et les fonctions Postgres.
+// Les variables d'environnement permettent de pointer vers un autre projet (ex. une branche de test).
+const DEFAULT_URL = "https://kycouzwgzxmpnhzywrrh.supabase.co";
+const DEFAULT_KEY = "sb_publishable__PgAYkv6qV3ihWrALzUtHg_3a8Ih9XC";
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_URL;
+const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_KEY;
 
 export const isSupabaseConfigured = Boolean(url && key);
 

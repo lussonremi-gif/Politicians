@@ -96,7 +96,9 @@ npm run dev                  # http://localhost:3000
 
 ### 3. Vercel
 1. Importer le dépôt GitHub sur [vercel.com/new](https://vercel.com/new) (framework détecté : Next.js).
-2. Ajouter les variables d'environnement `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+2. Aucune variable n'est obligatoire : l'URL et la clé publique du projet Supabase « Politicians » sont dans
+   `lib/supabase.ts`. Les variables `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` permettent de viser
+   un autre projet (elles sont lues au moment du build : redéployer après les avoir modifiées).
 3. Déployer. Chaque push sur la branche principale redéploie automatiquement.
 
 ## Données et règles éditoriales
