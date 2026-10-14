@@ -7,7 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Countdown } from "@/components/Countdown";
 import { DuelRoot } from "@/components/DuelPlay";
 import { Gate } from "@/components/Gate";
-import { QuoteCard } from "@/components/QuoteCard";
+import { CollectibleCard } from "@/components/CollectibleCard";
 import { QuoteDuel } from "@/components/QuoteDuel";
 import { errorMessage, getSupabase } from "@/lib/supabase";
 import { formatDate, type AnswerResult, type GameMode, type Question } from "@/lib/types";
@@ -236,7 +236,7 @@ function Game({ initialKind }: { initialKind: PlayKind }) {
 
       {result && chrono && (
         <p className={`flash ${result.correct ? "ok" : "ko"}`}>
-          {result.correct ? `+${result.points} pts` : `Raté : ${result.card.author}`}
+          {result.correct ? `+${result.points} pts` : `Raté : ${result.card.name}`}
         </p>
       )}
 
@@ -245,7 +245,7 @@ function Game({ initialKind }: { initialKind: PlayKind }) {
           <div className="reveal-text">
             <h2>{result.correct ? "Bonne réponse !" : "Raté…"}</h2>
             <p>
-              Cette phrase est de <strong>{result.card.author}</strong>
+              Cette phrase est de <strong>{result.card.name}</strong>
               {result.card.said_on && <>, le {formatDate(result.card.said_on)}</>}
               {result.card.occasion && <> ({result.card.occasion})</>}.
             </p>
@@ -275,7 +275,7 @@ function Game({ initialKind }: { initialKind: PlayKind }) {
           </div>
           {result.correct && (
             <div className="reveal-card">
-              <QuoteCard card={{ ...result.card, new: result.new_card }} />
+              <CollectibleCard card={{ ...result.card, new: result.new_card }} />
               <span className="muted small-text">Touchez la carte pour la retourner</span>
             </div>
           )}

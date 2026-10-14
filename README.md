@@ -34,6 +34,14 @@ y sont appliquées, ainsi que les données de démo de `supabase/seed.sql`.
 | `…000400_storage.sql` | Bucket public `portraits` (écriture réservée aux éditeurs) |
 | `…000500_politician_cards.sql` | Partis, personnalités, versions de cartes (année, intitulé, rareté), boosters de personnalités et par parti |
 | `…000600_booster_active.sql` | Boosters désactivables (masqués de la boutique) |
+| `…000700_quote_cards.sql` | **Modèle actuel** : une carte = une personnalité + une citation (table `cards`), 6 raretés, mêmes cartes pour le jeu, les duels, les boosters et l'album (`my_album()`) |
+
+**Contenu actuel : `supabase/seed_quote_cards.sql`** (32 cartes, 22 personnalités dont 17 avec des cartes). Les tables
+`quotes`, `personalities`, `politician_cards` et les fichiers `seed.sql` / `seed_politicians.sql` correspondent aux
+versions précédentes et ne sont plus utilisés par l'application.
+
+Raretés (selon le retentissement de la citation) : commune, peu commune, rare, épique, légendaire, mythique. Les
+probabilités de chaque booster sont dans `booster_types.weights` (en %).
 
 Contenu de la collection : `supabase/seed_politicians.sql` (10 partis, 12 personnalités, 36 cartes). Règle de rareté
 identique pour tous : la version la plus ancienne est légendaire, la suivante rare, « Saison 2026 » commune.

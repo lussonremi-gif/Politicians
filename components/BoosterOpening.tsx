@@ -2,26 +2,47 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { PoliticianCard } from "./PoliticianCard";
-import { QuoteCard } from "./QuoteCard";
+import { CollectibleCard } from "./CollectibleCard";
 import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/types";
 
 type Phase = "pack" | "charging" | "reveal" | "summary";
 
 // Durée de la « charge » du booster selon la meilleure carte qu'il contient
-const CHARGE_MS: Record<Rarity, number> = { common: 700, rare: 1500, legendary: 2800 };
+const CHARGE_MS: Record<Rarity, number> = {
+  common: 700,
+  uncommon: 900,
+  rare: 1400,
+  epic: 2000,
+  legendary: 2800,
+  mythic: 3600,
+};
+
+// Étapes d'entrée en scène avant l'apparition de la carte
+const STEPS: Record<Rarity, number> = { common: 0, uncommon: 0, rare: 1, epic: 1, legendary: 3, mythic: 3 };
+
+const HINT: Record<Rarity, string> = {
+  common: "Ouverture…",
+  uncommon: "Ouverture…",
+  rare: "Ça brille…",
+  epic: "Ça brille fort…",
+  legendary: "Quelque chose de spécial se prépare…",
+  mythic: "Une carte historique arrive…",
+};
 
 function bestRarity(cards: OpenedCard[]): Rarity {
   return cards.reduce<Rarity>((best, c) => (RARITY_RANK[c.rarity] > RARITY_RANK[best] ? c.rarity : best), "common");
 }
 
 function CardView({ card }: { card: OpenedCard }) {
-  return card.type === "politician" ? <PoliticianCard card={card} /> : <QuoteCard card={card} />;
+  return <CollectibleCard card={card} />;
 }
+
+const isWalkout = (r: Rarity) => r === "legendary" || r === "mythic";
 
 /** Éclats de lumière projetés autour de la carte (rare et légendaire). */
 function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
-  const count = rarity === "legendary" ? 46 : 22;
+  const big = isWalkout(rarity);
+  const count = rarity === "mythic" ? 70 : big ? 46 : rarity === "epic" ? 30 : 20;
   const parts = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => {
@@ -29,12 +50,12 @@ function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
         const rand = r - Math.floor(r);
         return {
           angle: (360 / count) * i + rand * 20,
-          distance: 140 + rand * (rarity === "legendary" ? 260 : 140),
+          distance: 140 + rand * (big ? 280 : 150),
           delay: rand * 0.25,
-          size: 4 + rand * (rarity === "legendary" ? 9 : 5),
+          size: 4 + rand * (big ? 9 : 5),
         };
       }),
-    [count, rarity, seed],
+    [count, big, seed],
   );
   return (
     <div className={`bo-particles ${rarity}`} aria-hidden>
@@ -83,7 +104,7 @@ export function BoosterOpening({
 
   const current = ordered[index];
   // Nombre d'étapes avant que la carte n'apparaisse : légendaire 3 (parti, année, carte), rare 1, commune 0
-  const stepsBeforeCard = current ? (current.rarity === "legendary" ? 3 : current.rarity === "rare" ? 1 : 0) : 0;
+  const stepsBeforeCard = current ? STEPS[current.rarity] : 0;
   const cardShown = phase === "reveal" && step >= stepsBeforeCard;
 
   // Bloque le défilement de la page pendant l'ouverture
@@ -111,7 +132,7 @@ export function BoosterOpening({
   // Entrée en scène progressive de la carte courante
   useEffect(() => {
     if (phase !== "reveal" || step >= stepsBeforeCard) return;
-    const delay = current?.rarity === "legendary" ? 850 : 650;
+    const delay = current?.rarity === "mythic" ? 1000 : current && isWalkout(current.rarity) ? 850 : 650;
     const t = setTimeout(() => setStep((s) => s + 1), delay);
     return () => clearTimeout(t);
   }, [phase, step, stepsBeforeCard, current]);
@@ -150,7 +171,7 @@ export function BoosterOpening({
       aria-label={`Ouverture : ${boosterName}`}
       onClick={phase === "summary" ? undefined : advance}
     >
-      {(stageRarity === "legendary" || stageRarity === "rare") && <div className="bo-rays" aria-hidden />}
+      {stageRarity !== "none" && RARITY_RANK[stageRarity] >= RARITY_RANK.rare && <div className="bo-rays" aria-hidden />}
       {flash && <div className={`bo-flash ${best}`} aria-hidden />}
 
       {phase !== "summary" && (
@@ -173,15 +194,7 @@ export function BoosterOpening({
             <span className="bo-pack-name">{boosterName}</span>
             <span className="bo-pack-count">{cards.length} cartes</span>
           </div>
-          <p className="bo-hint">
-            {phase === "pack"
-              ? "Touchez pour ouvrir"
-              : best === "legendary"
-                ? "Quelque chose de spécial se prépare…"
-                : best === "rare"
-                  ? "Ça brille…"
-                  : "Ouverture…"}
-          </p>
+          <p className="bo-hint">{phase === "pack" ? "Touchez pour ouvrir" : HINT[best]}</p>
         </div>
       )}
 
@@ -191,24 +204,25 @@ export function BoosterOpening({
             Carte {index + 1}/{ordered.length}
           </p>
 
-          {!cardShown && current.rarity === "legendary" && (
-            <div className="bo-walkout">
-              {step >= 0 && current.type === "politician" && current.party_short && (
+          {!cardShown && isWalkout(current.rarity) && (
+            <div className={`bo-walkout ${current.rarity}`}>
+              {step >= 0 && (
                 <span className="bo-walkout-party" style={{ ["--party" as string]: current.party_color ?? "#b8892b" }}>
-                  {current.party_name ?? current.party_short}
+                  {current.party_name ?? current.role ?? "Personnalité politique"}
                 </span>
               )}
-              {step >= 1 && current.type === "politician" && <span className="bo-walkout-year">{current.year}</span>}
-              {step >= 1 && current.type === "quote" && <span className="bo-walkout-year">« … »</span>}
-              <span className="bo-walkout-label">Légendaire</span>
+              {step >= 1 && current.said_on && <span className="bo-walkout-year">{current.said_on.slice(0, 4)}</span>}
+              <span className="bo-walkout-label">{RARITY_LABEL[current.rarity]}</span>
             </div>
           )}
-          {!cardShown && current.rarity === "rare" && <div className="bo-glow-orb" aria-hidden />}
+          {!cardShown && (current.rarity === "rare" || current.rarity === "epic") && (
+            <div className={`bo-glow-orb ${current.rarity}`} aria-hidden />
+          )}
 
           {cardShown && (
             // Toucher la carte la retourne (verso) ; toucher ailleurs passe à la suivante
             <div className={`bo-card enter-${current.rarity}`} onClick={(e) => e.stopPropagation()}>
-              {current.rarity !== "common" && <Particles rarity={current.rarity} seed={index + 1} />}
+              {RARITY_RANK[current.rarity] >= RARITY_RANK.rare && <Particles rarity={current.rarity} seed={index + 1} />}
               <CardView card={current} />
               <span className={`bo-banner ${current.rarity}`}>
                 {RARITY_LABEL[current.rarity]}

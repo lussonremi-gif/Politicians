@@ -1,10 +1,18 @@
-export type Rarity = "common" | "rare" | "legendary";
+/** Six niveaux de rareté, selon le retentissement de la citation. */
+export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
+
+export const RARITIES: Rarity[] = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: "Commune",
+  uncommon: "Peu commune",
   rare: "Rare",
+  epic: "Épique",
   legendary: "Légendaire",
+  mythic: "Mythique",
 };
+
+export const RARITY_RANK: Record<Rarity, number> = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
 
 export type Profile = {
   id: string;
@@ -23,6 +31,8 @@ export type Option = {
   name: string;
   description: string | null;
   image_url: string | null;
+  party_short?: string | null;
+  party_color?: string | null;
 };
 
 export type GameMode = "classic" | "chrono";
@@ -45,19 +55,27 @@ export type Question =
 
 export type Theme = { theme: string; quote_count: number };
 
-/** Recto + verso d'une carte. */
-export type Card = {
-  quote_id: string;
-  text: string;
+/** Carte du jeu et de la collection : une personnalité + une de ses citations. */
+export type GameCard = {
+  card_id: string;
+  text: string | null; // null dans l'album tant que la carte n'est pas obtenue
   rarity: Rarity;
-  author: string;
-  author_description: string | null;
+  theme: string | null;
   said_on: string | null;
   occasion: string | null;
   source_label: string | null;
   source_url: string | null;
-  theme: string | null;
-  is_demo: boolean;
+  politician_id: string;
+  politician_slug: string;
+  name: string;
+  role: string | null;
+  image_url: string | null;
+  image_credit: string | null;
+  image_license: string | null;
+  image_source_url: string | null;
+  party_name: string | null;
+  party_short: string | null;
+  party_color: string | null;
   new?: boolean;
   copies?: number;
 };
@@ -70,7 +88,7 @@ export type AnswerResult = {
   multiplier: number;
   streak: number;
   new_card: boolean;
-  card: Card;
+  card: GameCard;
 };
 
 export type BoosterType = {
@@ -88,6 +106,8 @@ export type BoosterType = {
   kind: "quotes" | "politicians";
   party_id: string | null;
   active: boolean;
+  weights: Partial<Record<Rarity, number>> | null;
+  tag: string | null;
   party?: Party | null;
 };
 
@@ -100,30 +120,8 @@ export type Party = {
   sort_order: number;
 };
 
-/** Carte « personnalité politique » (une version datée d'une personnalité). */
-export type PoliticianCardData = {
-  card_id: string;
-  rarity: Rarity;
-  year: number;
-  title: string;
-  party_label: string | null;
-  name: string;
-  politician_slug: string;
-  party_name: string | null;
-  party_short: string | null;
-  party_color: string | null;
-  image_url: string | null;
-  image_credit: string | null;
-  image_license: string | null;
-  image_source_url: string | null;
-  new?: boolean;
-  copies?: number;
-};
-
-/** Carte reçue dans un booster : citation ou personnalité. */
-export type OpenedCard = ({ type: "quote" } & Card) | ({ type: "politician" } & PoliticianCardData);
-
-export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, legendary: 2 };
+/** Carte reçue dans un booster. */
+export type OpenedCard = GameCard & { type: "card" };
 
 export function formatDate(d: string | null): string | null {
   if (!d) return null;
