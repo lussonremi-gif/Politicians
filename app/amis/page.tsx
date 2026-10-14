@@ -1,19 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { Gate } from "@/components/Gate";
 import { errorMessage, getSupabase } from "@/lib/supabase";
 import type { LeaderRow } from "@/lib/types";
 
+const USERNAME_PATTERN = /^[\p{L}\p{N}_ .\-]{2,20}$/u;
+
+function normalizeFriendInput(raw: string): string {
+  const text = raw.trim();
+  const fromLink = text.match(/[?&]ajouter=([A-Za-z0-9]+)/i);
+  const token = (fromLink ? fromLink[1] : text).replace(/\s+/g, "");
+  return token.toUpperCase();
+}
+
 function Friends() {
   const { profile, refreshProfile } = useAuth();
   const [username, setUsername] = useState(profile?.username ?? "");
-  const [friendCode, setFriendCode] = useState("");
+  const [friendInput, setFriendInput] = useState("");
   const [board, setBoard] = useState<LeaderRow[] | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"code" | "link" | null>(null);
+  const [savingAccount, setSavingAccount] = useState(false);
+  const invited = useRef<string | null>(null);
 
   const loadBoard = useCallback(async () => {
     const { data, error } = await getSupabase().rpc("friends_leaderboard");
@@ -22,56 +33,95 @@ function Friends() {
   }, []);
 
   useEffect(() => {
-    loadBoard();
-  }, [loadBoard]);
+    if (profile?.username) loadBoard();
+  }, [loadBoard, profile?.username]);
 
   useEffect(() => {
     setUsername(profile?.username ?? "");
   }, [profile?.username]);
 
+  const addFriendCode = useCallback(async (raw: string) => {
+    const token = normalizeFriendInput(raw);
+    if (token.length < 8) {
+      setMessage({ kind: "error", text: "Indiquez un code ami (8 caractères) ou un lien d'invitation." });
+      return false;
+    }
+    const { data, error } = await getSupabase().rpc("add_friend", { p_friend_code: token });
+    if (error) {
+      setMessage({ kind: "error", text: errorMessage(error) });
+      return false;
+    }
+    const name = (data as { username: string | null }).username ?? "Joueur anonyme";
+    setMessage({ kind: "ok", text: `${name} fait maintenant partie de vos amis.` });
+    setFriendInput("");
+    await loadBoard();
+    return true;
+  }, [loadBoard]);
+
+  useEffect(() => {
+    if (!profile?.username) return;
+    const code = new URLSearchParams(window.location.search).get("ajouter");
+    if (!code || invited.current === code.toUpperCase()) return;
+    invited.current = code.toUpperCase();
+    void addFriendCode(code).then((ok) => {
+      if (!ok) {
+        invited.current = null;
+        return;
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("ajouter");
+      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    });
+  }, [profile?.username, addFriendCode]);
+
   async function saveUsername(e: React.FormEvent) {
     e.preventDefault();
     if (!profile) return;
-    const { error } = await getSupabase()
-      .from("profiles")
-      .update({ username: username.trim() || null })
-      .eq("id", profile.id);
+    const next = username.trim();
+    if (!USERNAME_PATTERN.test(next)) {
+      setMessage({ kind: "error", text: "Pseudo invalide : 2 à 20 caractères (lettres, chiffres, espace, _ . -)." });
+      return;
+    }
+    setSavingAccount(true);
+    const { error } = await getSupabase().from("profiles").update({ username: next }).eq("id", profile.id);
+    setSavingAccount(false);
     if (error) return setMessage({ kind: "error", text: errorMessage(error) });
     setMessage({ kind: "ok", text: "Pseudo enregistré." });
-    refreshProfile();
-    loadBoard();
+    await refreshProfile();
   }
 
   async function addFriend(e: React.FormEvent) {
     e.preventDefault();
-    const { data, error } = await getSupabase().rpc("add_friend", { p_friend_code: friendCode.trim() });
-    if (error) return setMessage({ kind: "error", text: errorMessage(error) });
-    const name = (data as { username: string | null }).username ?? "Joueur anonyme";
-    setMessage({ kind: "ok", text: `${name} fait maintenant partie de vos amis.` });
-    setFriendCode("");
-    loadBoard();
+    await addFriendCode(friendInput);
   }
 
   async function removeFriend(row: LeaderRow) {
     if (!confirm(`Retirer ${row.username} de vos amis ?`)) return;
     const { error } = await getSupabase().rpc("remove_friend", { p_friend: row.user_id });
     if (error) return setMessage({ kind: "error", text: errorMessage(error) });
+    setMessage({ kind: "ok", text: `${row.username} a été retiré de vos amis.` });
     loadBoard();
   }
 
-  async function copyCode() {
+  async function copy(kind: "code" | "link") {
     if (!profile) return;
-    await navigator.clipboard?.writeText(profile.friend_code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const value = kind === "code" ? profile.friend_code : `${window.location.origin}/amis?ajouter=${profile.friend_code}`;
+    await navigator.clipboard?.writeText(value);
+    setCopied(kind);
+    setTimeout(() => setCopied(null), 2000);
   }
+
+  if (!profile) return <p className="muted center">Chargement du compte…</p>;
+
+  const friends = (board ?? []).filter((row) => !row.is_me);
 
   return (
     <section>
       <div className="section-head">
         <h1 className="headline">Amis</h1>
         <span className="tricolor" aria-hidden />
-        <p className="lead">Ajoutez vos amis avec leur code et comparez vos scores.</p>
+        <p className="lead">Ajoutez vos amis avec leur code ou leur lien, et comparez vos scores.</p>
+        <p className="account-status">Connecté en tant que {profile.username}. Ce compte reste sur cet appareil.</p>
       </div>
 
       {message && <p className={`notice center ${message.kind === "error" ? "error" : "success"}`}>{message.text}</p>}
@@ -89,34 +139,56 @@ function Friends() {
               maxLength={20}
               aria-label="Pseudo"
             />
-            <button className="btn primary" type="submit">Enregistrer</button>
+            <button className="btn primary" type="submit" disabled={savingAccount}>Enregistrer</button>
           </div>
         </form>
 
         <div className="panel">
           <h2>Mon code ami</h2>
-          <p className="muted">À donner à vos amis pour qu&apos;ils vous ajoutent.</p>
+          <p className="muted">À donner à vos amis, ou envoyez-leur le lien : ils sont ajoutés en l&apos;ouvrant.</p>
           <div className="inline-form">
-            <span className="friend-code">{profile?.friend_code ?? "…"}</span>
-            <button className="btn" type="button" onClick={copyCode}>{copied ? "Copié !" : "Copier"}</button>
+            <span className="friend-code">{profile.friend_code}</span>
+            <button className="btn" type="button" onClick={() => copy("code")}>{copied === "code" ? "Copié !" : "Copier"}</button>
+            <button className="btn" type="button" onClick={() => copy("link")}>{copied === "link" ? "Lien copié !" : "Copier le lien"}</button>
           </div>
         </div>
 
         <form className="panel" onSubmit={addFriend}>
           <h2>Ajouter un ami</h2>
-          <p className="muted">Entrez le code ami qu&apos;il vous a donné.</p>
+          <p className="muted">Collez un code ami ou un lien d&apos;invitation. Vous pouvez en ajouter plusieurs à la suite.</p>
           <div className="inline-form">
             <input
-              className="input code-input"
-              value={friendCode}
-              onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-              placeholder="EX : 8F2A91C4"
-              maxLength={8}
-              aria-label="Code ami"
+              className="input"
+              value={friendInput}
+              onChange={(e) => setFriendInput(e.target.value)}
+              placeholder="Code ou lien"
+              aria-label="Code ami ou lien d'invitation"
             />
-            <button className="btn primary" type="submit" disabled={friendCode.trim().length < 8}>Ajouter</button>
+            <button className="btn primary" type="submit" disabled={normalizeFriendInput(friendInput).length < 8}>
+              Ajouter
+            </button>
           </div>
         </form>
+      </div>
+
+      <div className="panel">
+        <h2>Mes amis</h2>
+        {!board ? (
+          <p className="muted">Chargement…</p>
+        ) : friends.length === 0 ? (
+          <p className="muted">Pas encore d&apos;amis. Copiez votre lien et envoyez-le, ou collez le leur ci-dessus.</p>
+        ) : (
+          <ul className="friend-list">
+            {friends.map((row) => (
+              <li key={row.user_id}>
+                <span>{row.username}</span>
+                <button className="link-btn" onClick={() => removeFriend(row)} aria-label={`Retirer ${row.username}`}>
+                  Retirer
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="panel">
@@ -157,11 +229,11 @@ function Friends() {
                 ))}
               </tbody>
             </table>
-            {board.length <= 1 && <p className="muted">Pas encore d&apos;amis : partagez votre code ami pour commencer.</p>}
+            {friends.length === 0 && <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>}
           </>
         )}
         <div className="actions">
-          <Link href="/duel" className="btn primary">Défier un ami en duel</Link>
+          <Link href="/jouer?mode=duel" className="btn primary">Défier un ami en duel</Link>
         </div>
       </div>
     </section>

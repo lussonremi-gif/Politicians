@@ -12,10 +12,7 @@ export default function Home() {
       </p>
       <div className="actions">
         <Link href="/jouer" className="btn primary">
-          Jouer une partie
-        </Link>
-        <Link href="/duel" className="btn">
-          Défier un ami
+          Jouer
         </Link>
         <Link href="/collection" className="btn">
           Ma collection
@@ -30,7 +27,7 @@ export default function Home() {
         <li><strong>Apprendre</strong><span>Date, occasion, source</span></li>
       </ol>
 
-      <p className="muted small-text">Modes classique et chrono, séries par thème, duels en temps réel et classement entre amis.</p>
+      <p className="muted small-text">Mode solo (classique ou chrono) ou duel en temps réel, et classement entre amis.</p>
     </section>
   );
 }

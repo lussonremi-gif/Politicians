@@ -6,12 +6,9 @@ import { useAuth } from "./AuthProvider";
 
 const NAV = [
   { href: "/jouer", label: "Jouer" },
-  { href: "/duel", label: "Duel" },
   { href: "/collection", label: "Collection" },
   { href: "/boosters", label: "Boosters" },
   { href: "/amis", label: "Amis" },
-  { href: "/a-propos", label: "À propos" },
-  { href: "/methodologie", label: "Méthodologie" },
 ];
 
 export function Header() {
@@ -34,7 +31,8 @@ export function Header() {
           </Link>
         ))}
         {profile && (
-          <span className="points-badge" title="Vos points">
+          <span className="points-badge" title={profile.username ? `Compte ${profile.username}` : "Compte de cet appareil"}>
+            {profile.username ? `${profile.username} · ` : ""}
             {profile.points.toLocaleString("fr-FR")} pts
           </span>
         )}

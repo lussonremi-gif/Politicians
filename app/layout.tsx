@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Crimson_Pro } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Header } from "@/components/Header";
+import { RequireAccount } from "@/components/RequireAccount";
 import "./globals.css";
 
 const serif = Crimson_Pro({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-serif" });
@@ -21,12 +22,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <div className="backdrop" aria-hidden />
-          <Header />
-          <main className="page">{children}</main>
-          <footer className="site-footer">
-            <span className="tricolor small" aria-hidden />
-            <p>Un jeu neutre : même traitement pour chaque candidat, chaque citation sourcée.</p>
-          </footer>
+          <RequireAccount>
+            <Header />
+            <main className="page">{children}</main>
+            <footer className="site-footer">
+              <span className="tricolor small" aria-hidden />
+              <p>Un jeu neutre : même traitement pour chaque candidat, chaque citation sourcée.</p>
+            </footer>
+          </RequireAccount>
         </AuthProvider>
       </body>
     </html>

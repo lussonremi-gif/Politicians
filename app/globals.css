@@ -350,6 +350,15 @@ button { font-family: inherit; }
 .input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
 .code-input { text-transform: uppercase; letter-spacing: 0.15em; font-variant-numeric: tabular-nums; }
 .friend-code { flex: 1; font-size: 26px; letter-spacing: 0.15em; font-weight: 600; }
+.account-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.account-setup { width: min(560px, 100%); margin: 0; text-align: center; }
+.account-setup .headline { font-size: 36px; }
+.account-setup .muted { margin: 8px 0 16px; }
+.account-setup .inline-form { justify-content: center; }
+.account-setup .notice { margin: 0 0 12px; }
+.account-status { text-align: center; color: var(--muted); margin: 0; }
+.friend-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.friend-list li { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .btn.small { padding: 4px 14px; font-size: 15px; }
 .notice.success { border-color: var(--ok); color: var(--ok); }
 .link-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 15px; }

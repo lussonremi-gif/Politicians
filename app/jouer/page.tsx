@@ -1,75 +1,102 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { Countdown } from "@/components/Countdown";
+import { DuelRoot } from "@/components/DuelPlay";
 import { Gate } from "@/components/Gate";
 import { QuoteCard } from "@/components/QuoteCard";
 import { QuoteDuel } from "@/components/QuoteDuel";
 import { errorMessage, getSupabase } from "@/lib/supabase";
-import { formatDate, type AnswerResult, type GameMode, type Question, type Theme } from "@/lib/types";
+import { formatDate, type AnswerResult, type GameMode, type Question } from "@/lib/types";
 
 const QUESTIONS_PER_GAME = 10;
 const CHRONO_SECONDS = 60;
 
-type Config = { mode: GameMode; theme: string | null };
+type PlayKind = "solo" | "duel";
+type Config = { mode: GameMode };
 
-function Setup({ initial, onStart, busy }: { initial: Config; onStart: (c: Config) => void; busy: boolean }) {
+function Setup({
+  initial,
+  initialKind,
+  onStart,
+  busy,
+}: {
+  initial: Config;
+  initialKind: PlayKind;
+  onStart: (c: Config) => void;
+  busy: boolean;
+}) {
+  const router = useRouter();
+  const [kind, setKind] = useState<PlayKind>(initialKind);
   const [mode, setMode] = useState<GameMode>(initial.mode);
-  const [theme, setTheme] = useState<string | null>(initial.theme);
-  const [themes, setThemes] = useState<Theme[]>([]);
 
   useEffect(() => {
-    getSupabase()
-      .rpc("list_themes")
-      .then(({ data }) => setThemes((data as Theme[]) ?? []));
-  }, []);
+    setKind(initialKind);
+  }, [initialKind]);
+
+  function choose(next: PlayKind) {
+    setKind(next);
+    router.replace(next === "duel" ? "/jouer?mode=duel" : "/jouer", { scroll: false });
+  }
 
   return (
-    <section className="hero">
-      <h1 className="headline">Nouvelle partie</h1>
-      <span className="tricolor" aria-hidden />
+    <>
+      <section className="hero">
+        <h1 className="headline">Nouvelle partie</h1>
+        <span className="tricolor" aria-hidden />
 
-      <div className="mode-grid">
-        <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
-          <strong>Classique</strong>
-          <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
-        </button>
-        <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
-          <strong>Chrono</strong>
-          <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
-        </button>
-      </div>
-
-      <h2 className="sub">Thème</h2>
-      <div className="chips">
-        <button className={theme === null ? "chip active" : "chip"} onClick={() => setTheme(null)}>
-          Tous les thèmes
-        </button>
-        {themes.map((t) => (
+        <div className="mode-grid">
           <button
-            key={t.theme}
-            className={theme === t.theme ? "chip active capitalize" : "chip capitalize"}
-            onClick={() => setTheme(t.theme)}
+            className={`mode-card ${kind === "solo" ? "active" : ""}`}
+            aria-pressed={kind === "solo"}
+            onClick={() => choose("solo")}
           >
-            {t.theme} <small>{t.quote_count}</small>
+            <strong>Solo</strong>
+            <span>Une partie pour vous, en classique ou en chrono</span>
           </button>
-        ))}
-      </div>
+          <button
+            className={`mode-card ${kind === "duel" ? "active" : ""}`}
+            aria-pressed={kind === "duel"}
+            onClick={() => choose("duel")}
+          >
+            <strong>Duel</strong>
+            <span>1 contre 1 en temps réel, la même série pour les deux joueurs</span>
+          </button>
+        </div>
 
-      <div className="actions">
-        <button className="btn primary" disabled={busy} onClick={() => onStart({ mode, theme })}>
-          {busy ? "Préparation…" : "Lancer la partie"}
-        </button>
-      </div>
-    </section>
+        {kind === "solo" && (
+          <>
+            <div className="mode-grid">
+              <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
+                <strong>Classique</strong>
+                <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
+              </button>
+              <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
+                <strong>Chrono</strong>
+                <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
+              </button>
+            </div>
+
+            <div className="actions">
+              <button className="btn primary" disabled={busy} onClick={() => onStart({ mode })}>
+                {busy ? "Préparation…" : "Lancer la partie"}
+              </button>
+            </div>
+          </>
+        )}
+      </section>
+
+      {kind === "duel" && <DuelRoot embeddedLobby />}
+    </>
   );
 }
 
-function Game() {
+function Game({ initialKind }: { initialKind: PlayKind }) {
   const { refreshProfile } = useAuth();
-  const [config, setConfig] = useState<Config>({ mode: "classic", theme: null });
+  const [config, setConfig] = useState<Config>({ mode: "classic" });
   const [session, setSession] = useState<string | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
   const [result, setResult] = useState<AnswerResult | null>(null);
@@ -102,7 +129,7 @@ function Game() {
     try {
       const { data, error } = await getSupabase().rpc("start_game", {
         p_question_count: QUESTIONS_PER_GAME,
-        p_theme: c.theme,
+        p_theme: null,
         p_mode: c.mode,
       });
       if (error) throw error;
@@ -158,7 +185,7 @@ function Game() {
     );
   }
 
-  if (!session || !question) return <Setup initial={config} onStart={start} busy={busy} />;
+  if (!session || !question) return <Setup initial={config} initialKind={initialKind} onStart={start} busy={busy} />;
 
   if (question.done) {
     const chrono = question.mode === "chrono";
@@ -192,7 +219,6 @@ function Game() {
         <span>{chrono ? `Chrono · question ${question.position}` : `Question ${question.position}/${question.total}`}</span>
         <span>{(result ? question.score + result.points : question.score).toLocaleString("fr-FR")} pts</span>
         <span className={streak >= 3 ? "streak hot" : "streak"}>Série : {streak}</span>
-        {config.theme && <span className="capitalize">Thème : {config.theme}</span>}
       </div>
       {chrono && question.ends_at && (
         <Countdown until={question.ends_at} totalSeconds={CHRONO_SECONDS} onEnd={() => loadNext(session)} />
@@ -259,10 +285,19 @@ function Game() {
   );
 }
 
+function PlayRoot() {
+  const params = useSearchParams();
+  const inRoom = Boolean(params.get("id") || params.get("code"));
+  if (inRoom) return <DuelRoot />;
+  return <Game initialKind={params.get("mode") === "duel" ? "duel" : "solo"} />;
+}
+
 export default function PlayPage() {
   return (
     <Gate>
-      <Game />
+      <Suspense fallback={<p className="muted center">Chargement…</p>}>
+        <PlayRoot />
+      </Suspense>
     </Gate>
   );
 }
