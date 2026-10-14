@@ -14,8 +14,8 @@ les points ouvrent des boosters pour compléter sa collection. Le verso de chaqu
 | Partie | `/jouer` | Choix du mode (classique 10 citations ou chrono 60 s) et du thème, contexte après chaque réponse |
 | Duel | `/duel` | Créer un duel (code + lien à partager), rejoindre, partie en temps réel, résultat, historique |
 | Amis | `/amis` | Pseudo, code ami, ajout d'amis, classement entre amis |
-| Collection | `/collection` | Cartes possédées, progression par rareté, filtre par personnalité, verso au clic |
-| Boosters | `/boosters` | Classique, premium, thématiques et par candidat, ouverture animée |
+| Collection | `/collection` | Album des personnalités politiques (3 versions par personnalité, cartes manquantes grisées, filtre par parti) et collection de citations |
+| Boosters | `/boosters` | Personnalités (classique, premium, par parti) et citations (par thème) ; ouverture animée, plus spectaculaire selon la rareté |
 | À propos / Méthodologie | `/a-propos`, `/methodologie` | Règles du jeu et règles éditoriales |
 
 Pas encore fait : comptes avec e-mail (la partie invitée est liée au navigateur), défi asynchrone entre amis.
@@ -32,6 +32,15 @@ y sont appliquées, ainsi que les données de démo de `supabase/seed.sql`.
 | `…000200_social.sql` | Pseudo, code ami, liste d'amis, classement entre amis |
 | `…000300_editorial.sql` | Rôles éditoriaux (contributeur, vérificateur, admin), validation des citations, tableau de neutralité |
 | `…000400_storage.sql` | Bucket public `portraits` (écriture réservée aux éditeurs) |
+| `…000500_politician_cards.sql` | Partis, personnalités, versions de cartes (année, intitulé, rareté), boosters de personnalités et par parti |
+| `…000600_booster_active.sql` | Boosters désactivables (masqués de la boutique) |
+
+Contenu de la collection : `supabase/seed_politicians.sql` (10 partis, 12 personnalités, 36 cartes). Règle de rareté
+identique pour tous : la version la plus ancienne est légendaire, la suivante rare, « Saison 2026 » commune.
+Photos : fichiers Wikimedia Commons sous licence libre, avec auteur et licence au verso de la carte. **À vérifier par
+l'équipe éditoriale avant le lancement** (crédits marqués « Wikimedia Commons » à compléter avec le nom de l'auteur,
+intitulés des versions). Le droit à l'image des personnes représentées reste à valider juridiquement, surtout si des
+boosters deviennent payants.
 
 ### API (fonctions appelées via `supabase.rpc(...)`)
 

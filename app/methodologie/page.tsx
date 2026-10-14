@@ -16,6 +16,17 @@ export default function Methodology() {
         Chaque candidat reçoit le même nombre de cartes, les mêmes raretés et le même traitement visuel. Les
         propositions sont affichées dans un ordre aléatoire.
       </p>
+      <h2>Cartes de personnalités</h2>
+      <p>
+        Chaque personnalité existe en trois versions datées. La règle est la même pour tous : la version la plus
+        ancienne est légendaire, la suivante rare, et la « Saison 2026 » commune. Les boosters ont les mêmes
+        probabilités quel que soit le parti.
+      </p>
+      <h2>Photos</h2>
+      <p>
+        Les portraits proviennent de Wikimedia Commons, sous licence libre (domaine public, CC0, CC BY ou CC BY-SA).
+        L&apos;auteur, la licence et un lien vers la source figurent au verso de chaque carte.
+      </p>
       <h2>Mise à jour</h2>
       <p>La liste des candidats évolue au fil des déclarations de candidature.</p>
       <h2>Données de démonstration</h2>

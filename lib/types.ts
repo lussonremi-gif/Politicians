@@ -85,7 +85,45 @@ export type BoosterType = {
   theme: string | null;
   personality_id: string | null;
   sort_order: number;
+  kind: "quotes" | "politicians";
+  party_id: string | null;
+  active: boolean;
+  party?: Party | null;
 };
+
+export type Party = {
+  id: string;
+  slug: string;
+  name: string;
+  short_name: string;
+  color: string;
+  sort_order: number;
+};
+
+/** Carte « personnalité politique » (une version datée d'une personnalité). */
+export type PoliticianCardData = {
+  card_id: string;
+  rarity: Rarity;
+  year: number;
+  title: string;
+  party_label: string | null;
+  name: string;
+  politician_slug: string;
+  party_name: string | null;
+  party_short: string | null;
+  party_color: string | null;
+  image_url: string | null;
+  image_credit: string | null;
+  image_license: string | null;
+  image_source_url: string | null;
+  new?: boolean;
+  copies?: number;
+};
+
+/** Carte reçue dans un booster : citation ou personnalité. */
+export type OpenedCard = ({ type: "quote" } & Card) | ({ type: "politician" } & PoliticianCardData);
+
+export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, legendary: 2 };
 
 export function formatDate(d: string | null): string | null {
   if (!d) return null;

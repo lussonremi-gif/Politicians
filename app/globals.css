@@ -396,3 +396,214 @@ button { font-family: inherit; }
   .scoreboard strong { font-size: 22px; }
   .site-nav { gap: 10px 14px; }
 }
+
+/* =====================================================================
+   Cartes « personnalité politique »
+   ===================================================================== */
+.pcard { width: 220px; height: 330px; perspective: 1000px; border: 0; padding: 0; background: transparent; cursor: pointer; color: #fff; text-align: left; font-family: inherit; }
+.pcard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
+.pcard.flipped .pcard-inner { transform: rotateY(180deg); }
+.pcard-face {
+  position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 14px 34px rgba(20, 27, 45, 0.28), 0 2px 6px rgba(20, 27, 45, 0.12);
+  border: 4px solid transparent;
+  background:
+    linear-gradient(#1b2232, #1b2232) padding-box,
+    linear-gradient(135deg, #e9ecf1, #9aa2ad 45%, #f4f5f7 60%, #8d939c) border-box;
+}
+/* Cadre selon la rareté */
+.pcard.rarity-rare .pcard-face {
+  background:
+    linear-gradient(#152448, #152448) padding-box,
+    linear-gradient(135deg, #8fb4ff, #2f5597 35%, #b6f0ff 55%, #3b62c9 75%, #a9c4ff) border-box;
+}
+.pcard.rarity-legendary .pcard-face {
+  background:
+    linear-gradient(#2a2010, #2a2010) padding-box,
+    linear-gradient(120deg, #fff1b8, #c9971d 25%, #fff6cf 45%, #a87412 65%, #ffe9a3 85%, #c9971d) border-box;
+  background-size: 100% 100%, 300% 300%;
+  animation: goldFrame 4s linear infinite;
+}
+.pcard-photo { position: absolute; inset: 0; }
+.pcard-photo img, .pcard-photo .portrait-fallback { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; display: flex; }
+.pcard-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 22%, transparent 48%, rgba(10, 14, 24, 0.92) 78%);
+}
+/* Les versions anciennes ont un traitement « archive » */
+.pcard.rarity-legendary .pcard-photo img { filter: sepia(0.45) contrast(1.08) saturate(1.1); }
+.pcard.rarity-rare .pcard-photo img { filter: saturate(1.15) contrast(1.04); }
+.pcard.rarity-legendary .pcard-photo::after { background: linear-gradient(180deg, rgba(60, 40, 0, 0.35) 0%, transparent 22%, transparent 48%, rgba(30, 20, 5, 0.94) 78%); }
+.pcard-shine { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.pcard.rarity-rare .pcard-shine, .pcard.rarity-legendary .pcard-shine {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.35) 45%, transparent 60%);
+  background-size: 250% 100%; animation: shine 3.2s ease-in-out infinite;
+}
+.pcard.rarity-legendary .pcard-shine { background-image: linear-gradient(115deg, transparent 30%, rgba(255, 236, 170, 0.55) 45%, transparent 60%); animation-duration: 2.4s; }
+.pcard-top { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; align-items: center; justify-content: space-between; z-index: 3; }
+.pcard-year { font-size: 30px; font-weight: 600; line-height: 1; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+.pcard.rarity-legendary .pcard-year { color: #ffe08a; }
+.pcard.rarity-rare .pcard-year { color: #bcd3ff; }
+.pcard-party { font-size: 13px; font-weight: 600; letter-spacing: 0.05em; padding: 2px 9px; border-radius: 999px; background: var(--party); color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7); }
+.pcard-badges { position: absolute; top: 48px; left: 12px; display: flex; gap: 6px; z-index: 3; }
+.copies-tag.light { color: #fff; border-color: rgba(255, 255, 255, 0.6); background: rgba(0, 0, 0, 0.3); }
+.pcard-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 14px 14px; display: flex; flex-direction: column; z-index: 3; }
+.pcard-bottom::before { content: ""; display: block; height: 3px; width: 46px; background: var(--party); margin-bottom: 8px; border-radius: 2px; }
+.pcard-rarity { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.85; }
+.pcard.rarity-legendary .pcard-rarity { color: #ffd66b; }
+.pcard.rarity-rare .pcard-rarity { color: #9fc0ff; }
+.pcard-name { font-size: 22px; line-height: 1.15; font-weight: 600; }
+.pcard-title { font-size: 14px; line-height: 1.25; opacity: 0.9; }
+.pcard-back { transform: rotateY(180deg); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.pcard-back .pcard-year.big { font-size: 44px; color: var(--party); text-shadow: none; filter: brightness(1.6); }
+.pcard-back dl { margin: 6px 0 0; font-size: 14px; flex: 1; }
+.pcard-back dt { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; margin-top: 7px; }
+.pcard-back dd { margin: 0; }
+.pcard-credit { font-size: 11px; opacity: 0.75; margin: 0; }
+.pcard-credit a { color: inherit; }
+/* Carte non obtenue */
+.pcard.locked { cursor: default; }
+.pcard.locked .pcard-photo img, .pcard.locked .pcard-photo .portrait-fallback { filter: grayscale(1) brightness(0.35) blur(1.5px); }
+.pcard.locked .pcard-face { animation: none; background: linear-gradient(#20242c, #20242c) padding-box, linear-gradient(135deg, #4a4f58, #2b2f36) border-box; }
+.pcard.locked .pcard-shine { display: none; }
+.pcard.locked .pcard-bottom, .pcard.locked .pcard-top { opacity: 0.55; }
+.pcard-lock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 4; font-size: 34px; opacity: 0.8; }
+.pcard:not(.locked):hover .pcard-inner { transform: translateY(-4px); }
+.pcard.flipped:not(.locked):hover .pcard-inner { transform: rotateY(180deg) translateY(-4px); }
+
+/* Album */
+.tabs { display: inline-flex; gap: 4px; padding: 4px; background: var(--paper); border-radius: 999px; box-shadow: var(--shadow); margin: 0 auto 8px; }
+.tabs button { border: 0; background: transparent; padding: 8px 22px; border-radius: 999px; font-family: inherit; font-size: 17px; cursor: pointer; color: var(--muted); }
+.tabs button.active { background: var(--ink); color: var(--paper); }
+.party-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--party); vertical-align: 1px; }
+.chip.toggle { display: inline-flex; align-items: center; gap: 6px; }
+.album-row { margin: 28px 0; }
+.album-row header { display: flex; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--party); padding-bottom: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.album-row h3 { margin: 0; font-size: 24px; font-weight: 600; }
+.album-party { color: var(--muted); font-size: 16px; }
+.album-count { margin-left: auto; font-weight: 600; color: var(--muted); }
+.album-cards { display: flex; gap: 20px; flex-wrap: wrap; }
+
+/* Boutique */
+.shop-title { font-size: 26px; font-weight: 600; margin: 36px 0 0; }
+.booster-pack { position: relative; background: radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--accent) 55%, #fff 10%), color-mix(in srgb, var(--accent) 70%, #000 45%) 78%) !important; }
+.pack-party { position: absolute; top: 8px; right: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; background: rgba(255, 255, 255, 0.18); padding: 1px 8px; border-radius: 999px; }
+
+/* =====================================================================
+   Ouverture de booster
+   ===================================================================== */
+.bo-overlay {
+  position: fixed; inset: 0; z-index: 100; overflow: hidden auto;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 45%, #1e2a48, #070a12 75%);
+  color: #fff; cursor: pointer; animation: fadeIn 0.25s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.bo-overlay.phase-summary { cursor: default; align-items: flex-start; }
+.bo-overlay.stage-rare { background: radial-gradient(circle at 50% 45%, #1f3d86, #050b1d 75%); }
+.bo-overlay.stage-legendary { background: radial-gradient(circle at 50% 45%, #5a3d07, #0b0702 72%); }
+.bo-center { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 24px; text-align: center; }
+.bo-hint { min-height: 1.5em; margin: 0; font-size: 18px; opacity: 0.8; letter-spacing: 0.02em; animation: pulse 1.8s ease-in-out infinite; }
+.bo-counter { margin: 0; font-size: 15px; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.12em; }
+.bo-skip { position: fixed; top: 16px; right: 16px; z-index: 5; background: rgba(255, 255, 255, 0.12); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 999px; padding: 6px 16px; font-family: inherit; font-size: 15px; cursor: pointer; }
+
+/* Le booster */
+.bo-pack {
+  width: 210px; height: 310px; border-radius: 14px; position: relative;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.25), transparent 40%),
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 80%, #fff 20%), color-mix(in srgb, var(--accent) 60%, #000 50%) 80%);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  animation: float 3s ease-in-out infinite;
+}
+.bo-pack::before, .bo-pack::after { content: ""; position: absolute; left: 0; right: 0; height: 16px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 12px); }
+.bo-pack::before { top: 0; border-radius: 14px 14px 0 0; }
+.bo-pack::after { bottom: 0; border-radius: 0 0 14px 14px; }
+.bo-pack .tricolor { margin: 0 0 6px; width: 90px; }
+.bo-pack-brand { font-size: 15px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
+.bo-pack-name { font-size: 26px; font-weight: 600; padding: 0 14px; line-height: 1.15; }
+.bo-pack-count { font-size: 14px; opacity: 0.75; }
+.bo-pack.charging { animation: shakeSoft 0.12s linear infinite; }
+.bo-pack.charging-common { box-shadow: 0 0 40px rgba(255, 255, 255, 0.35), 0 30px 60px rgba(0, 0, 0, 0.6); }
+.bo-pack.charging-rare { animation: shakeMid 0.09s linear infinite; box-shadow: 0 0 70px 10px rgba(90, 150, 255, 0.75); }
+.bo-pack.charging-legendary { animation: shakeHard 0.07s linear infinite, swell 2.8s ease-in forwards; box-shadow: 0 0 110px 30px rgba(255, 200, 70, 0.85); }
+
+/* Éclair au moment de l'ouverture */
+.bo-flash { position: fixed; inset: 0; z-index: 4; pointer-events: none; background: #fff; animation: flash 0.45s ease-out forwards; }
+.bo-flash.rare { background: #bcd3ff; }
+.bo-flash.legendary { background: #ffe9a8; }
+
+/* Rayons tournants */
+.bo-rays {
+  position: fixed; left: 50%; top: 50%; width: 220vmax; height: 220vmax; z-index: 1; pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.07) 0deg 8deg, transparent 8deg 22deg);
+  animation: spin 18s linear infinite; mask-image: radial-gradient(circle, #000 0%, transparent 55%);
+}
+.stage-rare .bo-rays { background: repeating-conic-gradient(from 0deg, rgba(120, 170, 255, 0.16) 0deg 8deg, transparent 8deg 22deg); }
+.stage-legendary .bo-rays { background: repeating-conic-gradient(from 0deg, rgba(255, 205, 90, 0.26) 0deg 9deg, transparent 9deg 20deg); animation-duration: 9s; }
+
+/* Entrée en scène d'une légendaire : parti → année → carte */
+.bo-walkout { display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 330px; justify-content: center; }
+.bo-walkout-party { font-size: 26px; font-weight: 600; padding: 6px 22px; border-radius: 999px; background: var(--party); box-shadow: 0 0 40px var(--party), 0 0 0 3px rgba(255, 255, 255, 0.6); animation: popIn 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.bo-walkout-year { font-size: 96px; font-weight: 600; line-height: 1; color: #ffe08a; text-shadow: 0 0 40px rgba(255, 200, 70, 0.9); animation: slam 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.bo-walkout-label { font-size: 16px; letter-spacing: 0.4em; text-transform: uppercase; color: #ffd66b; opacity: 0.8; }
+.bo-glow-orb { width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, #e5efff, #5b8cff 45%, transparent 70%); animation: orb 0.65s ease-in forwards; margin: 95px 0; }
+
+/* La carte révélée */
+.bo-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; cursor: default; }
+.bo-card .pcard { width: 250px; height: 375px; }
+.bo-card .pcard .pcard-name { font-size: 25px; }
+.bo-card.enter-common { animation: flipIn 0.55s ease-out; }
+.bo-card.enter-rare { animation: flipIn 0.6s ease-out, glowBlue 1.2s ease-out; }
+.bo-card.enter-legendary { animation: legendIn 0.9s cubic-bezier(0.2, 1.3, 0.4, 1), shakeBig 0.45s 0.15s linear; }
+.bo-banner { font-size: 18px; letter-spacing: 0.25em; text-transform: uppercase; padding: 4px 18px; border-radius: 999px; margin-top: 18px; }
+.bo-banner.common { background: rgba(255, 255, 255, 0.12); }
+.bo-banner.rare { background: #2f5597; box-shadow: 0 0 24px rgba(90, 150, 255, 0.8); }
+.bo-banner.legendary { background: linear-gradient(90deg, #a87412, #ffe08a, #a87412); color: #2a1a00; font-weight: 600; box-shadow: 0 0 40px rgba(255, 200, 70, 0.9); animation: popIn 0.6s 0.4s both cubic-bezier(0.2, 1.6, 0.4, 1); }
+
+/* Éclats */
+.bo-particles { position: absolute; left: 50%; top: 45%; width: 0; height: 0; pointer-events: none; z-index: -1; }
+.bo-particles span { position: absolute; left: 0; top: 0; border-radius: 50%; background: #9fc0ff; box-shadow: 0 0 8px #9fc0ff; animation: burst 1.3s ease-out forwards; }
+.bo-particles.legendary span { background: #ffd66b; box-shadow: 0 0 12px #ffcf4a; animation-duration: 1.8s; }
+
+/* Résumé */
+.bo-summary { position: relative; z-index: 2; width: 100%; max-width: 1100px; padding: 70px 20px 40px; text-align: center; }
+.bo-summary h2 { font-size: 32px; font-weight: 600; margin: 0 0 8px; }
+.bo-summary-grid { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; margin: 24px 0; }
+.bo-summary .qcard { color: var(--ink); }
+.btn.light { color: #fff; border-color: rgba(255, 255, 255, 0.6); }
+.btn.light:hover { background: #fff; color: var(--ink); }
+
+@keyframes goldFrame { 0% { background-position: 0 0, 0% 50%; } 100% { background-position: 0 0, 300% 50%; } }
+@keyframes shine { 0% { background-position: 150% 0; } 60%, 100% { background-position: -100% 0; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-10px) rotate(1deg); } }
+@keyframes shakeSoft { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-1px, 1px); } 75% { transform: translate(1px, -1px); } }
+@keyframes shakeMid { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(-3px, 2px) rotate(-1deg); } 75% { transform: translate(3px, -2px) rotate(1deg); } }
+@keyframes shakeHard { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -6px 3px; rotate: -2deg; } 75% { translate: 6px -3px; rotate: 2deg; } }
+@keyframes swell { from { scale: 1; } to { scale: 1.18; } }
+@keyframes flash { from { opacity: 0.95; } to { opacity: 0; } }
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes popIn { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes slam { from { opacity: 0; transform: scale(2.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes orb { 0% { transform: scale(0.2); opacity: 0.2; } 80% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+@keyframes flipIn { from { opacity: 0; transform: perspective(900px) rotateY(90deg) scale(0.8); } to { opacity: 1; transform: none; } }
+@keyframes legendIn { 0% { opacity: 0; transform: perspective(900px) rotateY(540deg) scale(0.3); } 100% { opacity: 1; transform: none; } }
+@keyframes glowBlue { 0% { filter: drop-shadow(0 0 0 rgba(90, 150, 255, 0)); } 40% { filter: drop-shadow(0 0 40px rgba(90, 150, 255, 1)); } 100% { filter: drop-shadow(0 0 14px rgba(90, 150, 255, 0.5)); } }
+@keyframes shakeBig { 0%, 100% { translate: 0 0; } 20% { translate: -10px 6px; } 40% { translate: 9px -7px; } 60% { translate: -7px 5px; } 80% { translate: 5px -3px; } }
+@keyframes burst { 0% { transform: rotate(var(--a)) translateX(0) scale(1.4); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(var(--d)) scale(0.2); opacity: 0; } }
+
+@media (max-width: 720px) {
+  .pcard { width: 160px; height: 240px; }
+  .pcard-year { font-size: 22px; }
+  .pcard-name { font-size: 17px; }
+  .pcard-title { font-size: 12px; }
+  .pcard-badges { top: 38px; }
+  .album-cards { gap: 10px; }
+  .bo-card .pcard { width: 230px; height: 345px; }
+  .bo-walkout-year { font-size: 72px; }
+}
+.bo-overlay .btn.primary { background: #fff; color: var(--ink); border-color: #fff; }
+.bo-overlay .btn.primary:hover { background: #ffe08a; border-color: #ffe08a; }
