@@ -38,7 +38,8 @@ create table public.quotes (
   rarity public.rarity not null default 'common',
   -- Règle éditoriale : seule une citation vérifiée (source contrôlée) est jouable.
   verified boolean not null default false,
-  verified_by text,
+  verified_by uuid references auth.users(id) on delete set null,
+  verified_at timestamptz,
   is_demo boolean not null default false,
   created_at timestamptz not null default now(),
   constraint decoy_differs check (decoy_personality_id is null or decoy_personality_id <> personality_id)
@@ -87,6 +88,10 @@ create table public.game_sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   status text not null default 'in_progress' check (status in ('in_progress', 'finished')),
+  -- classic : 10 citations ; chrono : un maximum de bonnes réponses en 60 secondes
+  mode text not null default 'classic' check (mode in ('classic', 'chrono')),
+  theme text,
+  ends_at timestamptz,
   score integer not null default 0,
   correct_count integer not null default 0,
   streak integer not null default 0,
@@ -182,56 +187,86 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Tirage de questions (partagé par les parties solo et les duels)
+-- Une citation vérifiée d'un candidat + le piège éditorial s'il existe,
+-- sinon une autre personnalité au hasard ; ordre d'affichage aléatoire.
+-- ---------------------------------------------------------------------------
+create function public._pick_questions(p_count integer, p_theme text)
+returns table (quote_id uuid, option_a uuid, option_b uuid)
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  r record;
+  v_decoy uuid;
+begin
+  for r in
+    select q.id, q.personality_id, q.decoy_personality_id
+      from quotes q
+      join personalities p on p.id = q.personality_id
+     where q.verified and p.kind = 'candidate'
+       and (p_theme is null or q.theme = p_theme)
+     order by random()
+     limit p_count
+  loop
+    v_decoy := r.decoy_personality_id;
+    if v_decoy is null then
+      select pe.id into v_decoy from personalities pe
+       where pe.id <> r.personality_id
+       order by (pe.kind = 'other') desc, random() limit 1;
+    end if;
+    continue when v_decoy is null;
+    quote_id := r.id;
+    if random() < 0.5 then
+      option_a := r.personality_id; option_b := v_decoy;
+    else
+      option_a := v_decoy; option_b := r.personality_id;
+    end if;
+    return next;
+  end loop;
+end $$;
+
+-- Thèmes jouables (séries thématiques)
+create function public.list_themes()
+returns table (theme text, quote_count bigint)
+language sql stable security definer set search_path = public as $$
+  select q.theme, count(*)
+    from quotes q join personalities p on p.id = q.personality_id
+   where q.verified and p.kind = 'candidate' and q.theme is not null
+   group by q.theme order by q.theme;
+$$;
+
+-- ---------------------------------------------------------------------------
 -- Jeu : démarrer une partie
 -- ---------------------------------------------------------------------------
-create function public.start_game(p_question_count integer default 10)
+create function public.start_game(
+  p_question_count integer default 10,
+  p_theme text default null,
+  p_mode text default 'classic'
+)
 returns uuid
 language plpgsql security definer set search_path = public as $$
 declare
   v_user uuid := auth.uid();
   v_session uuid;
-  v_quote record;
-  v_decoy uuid;
-  v_pos integer := 0;
+  v_count integer;
 begin
   if v_user is null then raise exception 'not authenticated'; end if;
-  p_question_count := least(greatest(p_question_count, 1), 20);
+  if p_mode not in ('classic', 'chrono') then raise exception 'invalid mode'; end if;
+  v_count := case when p_mode = 'chrono' then 40 else least(greatest(p_question_count, 1), 20) end;
 
   -- Abandon des éventuelles parties en cours
   update game_sessions set status = 'finished', finished_at = now()
    where user_id = v_user and status = 'in_progress';
 
-  insert into game_sessions (user_id) values (v_user) returning id into v_session;
+  insert into game_sessions (user_id, mode, theme, ends_at)
+  values (v_user, p_mode, p_theme, case when p_mode = 'chrono' then now() + interval '60 seconds' end)
+  returning id into v_session;
 
-  for v_quote in
-    select q.id, q.personality_id, q.decoy_personality_id
-      from quotes q
-      join personalities p on p.id = q.personality_id
-     where q.verified and p.kind = 'candidate'
-     order by random()
-     limit p_question_count
-  loop
-    -- Le piège éditorial s'il existe, sinon une autre personnalité au hasard
-    v_decoy := v_quote.decoy_personality_id;
-    if v_decoy is null then
-      select id into v_decoy from personalities
-       where id <> v_quote.personality_id
-       order by (kind = 'other') desc, random() limit 1;
-    end if;
-    if v_decoy is null then continue; end if;
+  insert into game_questions (session_id, position, quote_id, option_a, option_b)
+  select v_session, row_number() over (), pq.quote_id, pq.option_a, pq.option_b
+    from _pick_questions(v_count, p_theme) pq;
+  get diagnostics v_count = row_count;
 
-    v_pos := v_pos + 1;
-    -- Ordre d'affichage aléatoire des deux propositions
-    if random() < 0.5 then
-      insert into game_questions (session_id, position, quote_id, option_a, option_b)
-      values (v_session, v_pos, v_quote.id, v_quote.personality_id, v_decoy);
-    else
-      insert into game_questions (session_id, position, quote_id, option_a, option_b)
-      values (v_session, v_pos, v_quote.id, v_decoy, v_quote.personality_id);
-    end if;
-  end loop;
-
-  if v_pos = 0 then
+  if v_count = 0 then
     raise exception 'no playable quotes';
   end if;
 
@@ -266,8 +301,18 @@ begin
    where gq.session_id = p_session and gq.answered_at is null
    order by gq.position limit 1;
 
-  if not found or v_s.status = 'finished' then
-    return jsonb_build_object('done', true, 'total', v_total,
+  -- Fin du chrono
+  if v_s.ends_at is not null and now() > v_s.ends_at and v_s.status = 'in_progress' then
+    update game_sessions set status = 'finished', finished_at = now() where id = p_session;
+    v_s.status := 'finished';
+  end if;
+
+  if v_q.id is null or v_s.status = 'finished' then
+    -- En mode chrono, le total affiché est le nombre de questions jouées
+    if v_s.mode = 'chrono' then
+      select count(*) into v_total from game_questions where session_id = p_session and answered_at is not null;
+    end if;
+    return jsonb_build_object('done', true, 'total', v_total, 'mode', v_s.mode,
       'score', v_s.score, 'correct', v_s.correct_count, 'max_streak', v_s.max_streak);
   end if;
 
@@ -277,6 +322,8 @@ begin
 
   return jsonb_build_object(
     'done', false,
+    'mode', v_s.mode,
+    'ends_at', v_s.ends_at,
     'question_id', v_q.id,
     'position', v_q.position,
     'total', v_total,
@@ -324,11 +371,15 @@ begin
   if not found then raise exception 'question not found'; end if;
   if v_q.answered_at is not null then raise exception 'already answered'; end if;
   if v_q.served_at is null then raise exception 'question not served'; end if;
-  if p_choice not in (v_q.option_a, v_q.option_b) then raise exception 'invalid choice'; end if;
+  if p_choice is null or p_choice not in (v_q.option_a, v_q.option_b) then raise exception 'invalid choice'; end if;
 
   select * into v_quote from quotes where id = v_q.quote_id;
   select * into v_author from personalities where id = v_quote.personality_id;
   select * into v_s from game_sessions where id = v_q.session_id for update;
+  if v_s.ends_at is not null and now() > v_s.ends_at + interval '2 seconds' then
+    update game_sessions set status = 'finished', finished_at = now() where id = v_s.id;
+    raise exception 'time is up';
+  end if;
 
   v_correct := (p_choice = v_quote.personality_id);
   v_elapsed := extract(epoch from (now() - v_q.served_at));
@@ -466,12 +517,15 @@ begin
 end $$;
 
 -- Les fonctions de jeu ne sont appelables que par un utilisateur connecté (invité compris)
-revoke execute on function public.start_game(integer) from public, anon;
+revoke execute on function public.start_game(integer, text, text) from public, anon;
+revoke execute on function public._pick_questions(integer, text) from public, anon, authenticated;
 revoke execute on function public.next_question(uuid) from public, anon;
 revoke execute on function public.submit_answer(uuid, uuid) from public, anon;
 revoke execute on function public.open_booster(text) from public, anon;
-grant execute on function public.start_game(integer) to authenticated;
+grant execute on function public.start_game(integer, text, text) to authenticated;
 grant execute on function public.next_question(uuid) to authenticated;
 grant execute on function public.submit_answer(uuid, uuid) to authenticated;
 grant execute on function public.open_booster(text) to authenticated;
 grant execute on function public.collection_totals() to anon, authenticated;
+grant execute on function public.list_themes() to anon, authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;

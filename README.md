@@ -18,6 +18,41 @@ les points ouvrent des boosters pour compléter sa collection. Le verso de chaqu
 
 Pas encore fait : duel en temps réel, mode chrono, défi entre amis, comptes avec e-mail.
 
+## Backend Supabase
+
+Projet Supabase : **Politicians** (`kycouzwgzxmpnhzywrrh`, eu-west-1). Les migrations de `supabase/migrations/`
+y sont appliquées, ainsi que les données de démo de `supabase/seed.sql`.
+
+| Migration | Contenu |
+|---|---|
+| `…000000_init.sql` | Personnalités, citations, profils, collection, parties solo (classique, chrono 60 s, par thème), boosters |
+| `…000100_duels.sql` | Duels 1 contre 1 en temps réel (code d'invitation, même série pour les deux joueurs, 15 s par réponse, abandons) |
+| `…000200_social.sql` | Pseudo, code ami, liste d'amis, classement entre amis |
+| `…000300_editorial.sql` | Rôles éditoriaux (contributeur, vérificateur, admin), validation des citations, tableau de neutralité |
+| `…000400_storage.sql` | Bucket public `portraits` (écriture réservée aux éditeurs) |
+
+### API (fonctions appelées via `supabase.rpc(...)`)
+
+| Domaine | Fonctions |
+|---|---|
+| Partie solo | `start_game(p_question_count, p_theme, p_mode)`, `next_question(p_session)`, `submit_answer(p_question, p_choice)`, `list_themes()` |
+| Collection et boosters | `collection_totals()`, `open_booster(p_slug)` ; lecture directe de `user_cards`, `booster_types` |
+| Duel | `create_duel(p_theme, p_question_count)` → `{id, code}`, `join_duel(p_code)`, `duel_state(p_duel)`, `submit_duel_answer(p_duel, p_position, p_choice)`, `abandon_duel(p_duel)`, `my_duels()` |
+| Amis | `add_friend(p_friend_code)`, `remove_friend(p_friend)`, `friends_leaderboard()` ; le pseudo se modifie avec `update profiles set username` |
+| Éditorial | `verify_quote(p_quote, p_verified)`, vues `quotes_to_verify` et `candidate_balance` |
+
+**Duel en temps réel :** le client s'abonne en Realtime aux changements de sa ligne `duels`
+(`supabase.channel(...).on("postgres_changes", { table: "duels", filter: "id=eq.<id>" })`) et rappelle `duel_state`
+à chaque changement ou à l'échéance `deadline`. Le serveur fait avancer le duel quand les deux joueurs ont répondu ou
+que le temps est écoulé ; la bonne réponse n'est révélée qu'après sa propre réponse. Le vainqueur gagne 200 points et
+une carte du duel. En cas d'abandon, ce bonus n'est accordé que si plus de la moitié du duel a été jouée.
+
+**Rôles éditoriaux :** ajouter une ligne dans `editors` (`user_id`, `role`) depuis le dashboard. Un contributeur
+propose des citations non vérifiées ; seul un vérificateur peut les valider (`verify_quote` exige une date et une
+source). `candidate_balance` donne le nombre de cartes par candidat et par rareté pour contrôler la neutralité.
+
+Types TypeScript à jour : `npx supabase gen types typescript --project-id kycouzwgzxmpnhzywrrh > lib/database.types.ts`.
+
 ### Sécurité anti-triche
 Le client ne connaît jamais la bonne réponse avant d'avoir répondu : la table `quotes` n'est lisible que pour les
 cartes déjà possédées (RLS), et tout passe par des fonctions Postgres `security definer` :
@@ -28,7 +63,9 @@ cartes déjà possédées (RLS), et tout passe par des fonctions Postgres `secur
 - `submit_answer(question, choix)` : vérifie la réponse, calcule les points, ajoute la carte, renvoie le contexte
 - `open_booster(slug)` : débite les points et tire les cartes selon les probabilités du booster
 
-Le joueur ne peut modifier que son `username` ; les points ne changent que via ces fonctions.
+Le joueur ne peut modifier que son `username` ; les points ne changent que via ces fonctions. Les tables
+`game_questions`, `duel_questions` et `duel_answers` n'ont volontairement aucune policy : elles ne sont accessibles
+qu'à travers les fonctions.
 
 ### Barème v1 (à valider avec l'équipe)
 - 100 pts par bonne réponse, + jusqu'à 50 pts de bonus de rapidité (dégressif sur 15 s)
@@ -44,8 +81,8 @@ la table `booster_types`.
 ### 1. Supabase
 1. Créer un projet sur [supabase.com](https://supabase.com).
 2. **Authentication → Sign In / Providers → activer « Allow anonymous sign-ins »** (indispensable pour la partie invitée).
-3. **SQL Editor** : exécuter `supabase/migrations/20261014000000_init.sql`, puis `supabase/seed.sql` pour les données de démo.
-   Avec la CLI : `supabase link --project-ref <ref>` puis `supabase db push`.
+3. Le projet **Politicians** est déjà prêt. Pour un nouveau projet : exécuter dans l'ordre les fichiers de
+   `supabase/migrations/`, puis `supabase/seed.sql` (ou `supabase link --project-ref <ref>` puis `supabase db push`).
 4. Récupérer l'URL du projet et la clé `anon` (Project Settings → API).
 
 ### 2. En local
