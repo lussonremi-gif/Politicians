@@ -7,8 +7,8 @@ export default function Home() {
       <h1 className="headline">« Qui l&apos;a dit ? »</h1>
       <span className="tricolor" aria-hidden />
       <p className="lead">
-        Une citation, deux noms, un seul bon. Découvrez les candidats à la présidentielle 2027 à travers leurs propres
-        mots, et collectionnez les cartes.
+        Une vraie citation, deux personnalités politiques : qui l&apos;a dit ? Des phrases cultes de la Ve République
+        aux petites phrases d&apos;aujourd&apos;hui, gagnez les cartes et complétez votre collection.
       </p>
       <div className="actions">
         <Link href="/jouer" className="btn primary">
@@ -26,7 +26,7 @@ export default function Home() {
         <li><strong>Jouer</strong><span>Une citation, deux noms</span></li>
         <li><strong>Gagner</strong><span>Points, rapidité, séries</span></li>
         <li><strong>Ouvrir</strong><span>Des boosters de cartes</span></li>
-        <li><strong>Collectionner</strong><span>Commune, rare, légendaire</span></li>
+        <li><strong>Collectionner</strong><span>De commune à mythique</span></li>
         <li><strong>Apprendre</strong><span>Date, occasion, source</span></li>
       </ol>
 

@@ -11,16 +11,11 @@ export default function Methodology() {
         Aucune citation n&apos;est inventée ni sortie de son contexte. Seules les citations dont la source a été
         contrôlée sont jouables.
       </p>
-      <h2>Neutralité</h2>
+      <h2>Rareté des cartes</h2>
       <p>
-        Chaque candidat reçoit le même nombre de cartes, les mêmes raretés et le même traitement visuel. Les
-        propositions sont affichées dans un ordre aléatoire.
-      </p>
-      <h2>Cartes de personnalités</h2>
-      <p>
-        Chaque personnalité existe en trois versions datées. La règle est la même pour tous : la version la plus
-        ancienne est légendaire, la suivante rare, et la « Saison 2026 » commune. Les boosters ont les mêmes
-        probabilités quel que soit le parti.
+        La rareté d&apos;une carte reflète le retentissement de la citation (reprises, notoriété, place dans
+        l&apos;histoire politique), pas un jugement sur la personne ou sur ses idées. Les deux personnalités proposées
+        sont affichées dans un ordre aléatoire.
       </p>
       <h2>Photos</h2>
       <p>
@@ -28,13 +23,7 @@ export default function Methodology() {
         L&apos;auteur, la licence et un lien vers la source figurent au verso de chaque carte.
       </p>
       <h2>Mise à jour</h2>
-      <p>La liste des candidats évolue au fil des déclarations de candidature.</p>
-      <h2>Données de démonstration</h2>
-      <p>
-        Pendant la phase de test, le jeu peut contenir des personnalités et des citations <strong>fictives</strong>,
-        signalées par la mention « Démo · fictif ». Elles servent uniquement à tester le jeu et ne correspondent à aucune
-        déclaration réelle.
-      </p>
+      <p>De nouvelles cartes sont ajoutées au fil de l&apos;actualité, après vérification de leur source.</p>
     </article>
   );
 }

@@ -5,9 +5,17 @@ import { useAuth } from "@/components/AuthProvider";
 import { BoosterOpening } from "@/components/BoosterOpening";
 import { Gate } from "@/components/Gate";
 import { errorMessage, getSupabase } from "@/lib/supabase";
-import type { BoosterType, OpenedCard } from "@/lib/types";
+import { RARITIES, RARITY_LABEL, type BoosterType, type OpenedCard } from "@/lib/types";
 
 type Opened = { booster: BoosterType; cards: OpenedCard[] };
+
+function boosterAccent(b: BoosterType) {
+  if (b.party?.color) return b.party.color;
+  if (b.slug === "premium") return "#b8892b";
+  if (b.tag === "president") return "#2f5597";
+  if (b.theme) return "#6b3fa0";
+  return "#141b2d";
+}
 
 function BoosterTile({
   b,
@@ -20,20 +28,23 @@ function BoosterTile({
   busy: boolean;
   onOpen: (b: BoosterType) => void;
 }) {
-  const accent = b.party?.color ?? (b.kind === "quotes" ? "#2f5597" : b.slug === "premium" ? "#b8892b" : "#141b2d");
+  const accent = boosterAccent(b);
+  const odds = b.weights
+    ? RARITIES.filter((r) => (b.weights?.[r] ?? 0) > 0)
+        .map((r) => `${RARITY_LABEL[r]} ${b.weights?.[r]}%`)
+        .join(" · ")
+    : `Commune ${b.weight_common}% · Rare ${b.weight_rare}% · Légendaire ${b.weight_legendary}%`;
   return (
     <article className={`booster ${b.kind}`} style={{ ["--accent" as string]: accent }}>
       <div className="booster-pack" aria-hidden>
         <span className="tricolor small" />
         <span className="pack-count">{b.card_count}</span>
-        <span className="pack-label">{b.kind === "quotes" ? "citations" : "cartes"}</span>
+        <span className="pack-label">cartes</span>
         {b.party && <span className="pack-party">{b.party.short_name}</span>}
       </div>
       <h3>{b.name}</h3>
       {b.description && <p className="muted">{b.description}</p>}
-      <p className="odds">
-        Commune {b.weight_common}% · Rare {b.weight_rare}% · Légendaire {b.weight_legendary}%
-      </p>
+      <p className="odds">{odds}</p>
       <button className="btn primary" disabled={points < b.price || busy} onClick={() => onOpen(b)}>
         Ouvrir · {b.price} pts
       </button>
@@ -78,9 +89,9 @@ function Boosters() {
   }
 
   const points = profile?.points ?? 0;
-  const general = boosters.filter((b) => b.kind === "politicians" && !b.party_id);
-  const byParty = boosters.filter((b) => b.kind === "politicians" && b.party_id);
-  const quotes = boosters.filter((b) => b.kind === "quotes");
+  const general = boosters.filter((b) => !b.party_id && !b.tag && !b.theme);
+  const special = boosters.filter((b) => !b.party_id && (b.tag || b.theme));
+  const byParty = boosters.filter((b) => b.party_id);
 
   return (
     <section>
@@ -88,8 +99,8 @@ function Boosters() {
         <h1 className="headline">Boosters</h1>
         <span className="tricolor" aria-hidden />
         <p className="lead">
-          Vous avez <strong>{points.toLocaleString("fr-FR")} points</strong>. Chaque personnalité existe en plusieurs
-          versions : plus elle est ancienne, plus elle est rare.
+          Vous avez <strong>{points.toLocaleString("fr-FR")} points</strong>. Chaque carte associe une personnalité à
+          l&apos;une de ses citations : plus la phrase est culte, plus elle est rare.
         </p>
       </div>
 
@@ -97,9 +108,20 @@ function Boosters() {
 
       {general.length > 0 && (
         <>
-          <h2 className="shop-title">Personnalités politiques</h2>
+          <h2 className="shop-title">Boosters</h2>
           <div className="booster-grid">
             {general.map((b) => (
+              <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {special.length > 0 && (
+        <>
+          <h2 className="shop-title">Éditions spéciales</h2>
+          <div className="booster-grid">
+            {special.map((b) => (
               <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
             ))}
           </div>
@@ -117,22 +139,11 @@ function Boosters() {
         </>
       )}
 
-      {quotes.length > 0 && (
-        <>
-          <h2 className="shop-title">Citations</h2>
-          <div className="booster-grid">
-            {quotes.map((b) => (
-              <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
-            ))}
-          </div>
-        </>
-      )}
-
       {opened && (
         <BoosterOpening
           cards={opened.cards}
           boosterName={opened.booster.name}
-          accent={opened.booster.party?.color ?? (opened.booster.slug === "premium" ? "#b8892b" : "#2f5597")}
+          accent={boosterAccent(opened.booster)}
           onClose={() => setOpened(null)}
         />
       )}

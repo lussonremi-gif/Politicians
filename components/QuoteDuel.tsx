@@ -1,4 +1,4 @@
-import { Portrait } from "./Portrait";
+import { Photo } from "./Photo";
 import type { Option } from "@/lib/types";
 
 /** Écran de choix commun au jeu solo et au duel : la citation et les deux personnalités. */
@@ -49,7 +49,12 @@ export function QuoteDuel({
             disabled={disabled}
           >
             <div className="person-photo">
-              <Portrait person={opt} />
+              <Photo src={opt.image_url} name={opt.name} className="portrait-img" />
+              {opt.party_short && (
+                <span className="person-party" style={{ ["--party" as string]: opt.party_color ?? "#8d939c" }}>
+                  {opt.party_short}
+                </span>
+              )}
             </div>
             <div className="person-name">
               {opt.name}
