@@ -43,7 +43,8 @@ export function CollectibleCard({ card, locked = false }: { card: GameCard; lock
               {shown.party_short && <span className="ccard-party">{shown.party_short}</span>}
             </div>
             <div className="ccard-badges">
-              {shown.new && <span className="new-tag">Nouvelle</span>}
+              {shown.new === true && <span className="new-tag">Nouvelle</span>}
+              {shown.new === false && <span className="dupe-tag">Déjà obtenue</span>}
               {shown.copies && shown.copies > 1 ? <span className="copies-tag light">×{shown.copies}</span> : null}
             </div>
             <div className="ccard-nameplate">
