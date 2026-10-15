@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { presentCard } from "@/lib/cardArt";
 import { Photo } from "./Photo";
-import { RARITY_LABEL, formatDate, type GameCard } from "@/lib/types";
+import { RARITY_LABEL, formatDate, type GameCard, type Rarity } from "@/lib/types";
+
+const RARITY_GEMS: Record<Rarity, number> = { common: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
 
 /**
- * Carte à collectionner : le portrait de l'auteur, sa citation, puis le contexte au verso.
- * Le cadre et l'anneau du portrait suivent la rareté.
+ * Carte à collectionner : la photo de la citation en grand, la phrase, puis le contexte au verso.
+ * Cadre, gemmes et reflet holographique montent en gamme avec la rareté.
  */
 export function CollectibleCard({ card, locked = false }: { card: GameCard; locked?: boolean }) {
   const shown = presentCard(card);
@@ -24,25 +26,33 @@ export function CollectibleCard({ card, locked = false }: { card: GameCard; lock
     >
       <div className="ccard-inner">
         <div className="ccard-face ccard-front">
-          <div className="ccard-pattern" aria-hidden />
-          <div className="ccard-shine" aria-hidden />
-          <div className="ccard-top">
-            <span className="ccard-rarity">{RARITY_LABEL[shown.rarity]}</span>
-            {shown.party_short && <span className="ccard-party">{shown.party_short}</span>}
-          </div>
-          <div className="ccard-badges">
-            {shown.new && <span className="new-tag">Nouvelle</span>}
-            {shown.copies && shown.copies > 1 ? <span className="copies-tag light">×{shown.copies}</span> : null}
-          </div>
-          <div className="ccard-portrait">
+          <div className="ccard-art">
             <Photo src={shown.image_url} fallbackSrc={shown.fallback_image_url} focus={shown.image_focus} name={shown.name} />
+            <div className="ccard-foil" aria-hidden />
+            <div className="ccard-art-fade" aria-hidden />
             {locked && <div className="ccard-lock" aria-hidden>🔒</div>}
-          </div>
-          <div className="ccard-nameplate">
-            <strong>{shown.name}</strong>
-            {year && !locked && <span>{year}</span>}
+            <div className="ccard-top">
+              <span className="ccard-rarity">
+                <span className="ccard-gems" aria-hidden>
+                  {Array.from({ length: RARITY_GEMS[shown.rarity] }, (_, i) => (
+                    <i key={i} />
+                  ))}
+                </span>
+                {RARITY_LABEL[shown.rarity]}
+              </span>
+              {shown.party_short && <span className="ccard-party">{shown.party_short}</span>}
+            </div>
+            <div className="ccard-badges">
+              {shown.new && <span className="new-tag">Nouvelle</span>}
+              {shown.copies && shown.copies > 1 ? <span className="copies-tag light">×{shown.copies}</span> : null}
+            </div>
+            <div className="ccard-nameplate">
+              <strong>{shown.name}</strong>
+              {year && !locked && <span>{year}</span>}
+            </div>
           </div>
           <p className="ccard-quote">{locked ? "Citation à découvrir" : `« ${shown.text} »`}</p>
+          <div className="ccard-shine" aria-hidden />
         </div>
 
         <div className="ccard-face ccard-back">

@@ -501,61 +501,104 @@ button { font-family: inherit; }
    Cartes « personnalité + citation » : 6 raretés
    ===================================================================== */
 .ccard {
-  --frame: linear-gradient(135deg, #eef0f3, #9aa2ad 45%, #f4f5f7 60%, #8d939c);
+  --frame: linear-gradient(135deg, #f4f5f7, #a3aab4 45%, #f4f5f7 60%, #8d939c);
   --tint: #1b2232;
   --accent: #d5d9df;
+  --gem: #c9ced6;
+  --rim: 5px;
   width: 230px; height: 360px; perspective: 1000px; border: 0; padding: 0; background: transparent;
   cursor: pointer; color: #fff; text-align: left; font-family: inherit; flex: none;
 }
-.ccard.rarity-uncommon { --frame: linear-gradient(135deg, #c8f2d6, #2e9c5a 40%, #e2fbe9 60%, #237a46); --tint: #10261a; --accent: #8fe0ad; }
-.ccard.rarity-rare { --frame: linear-gradient(135deg, #a9c4ff, #2f5597 35%, #c6f2ff 55%, #3b62c9 75%, #a9c4ff); --tint: #121f40; --accent: #9fc0ff; }
-.ccard.rarity-epic { --frame: linear-gradient(135deg, #e6c8ff, #7b3fc4 35%, #f6e6ff 55%, #5b2a9a 75%, #d3a8ff); --tint: #1f1035; --accent: #d3a8ff; }
-.ccard.rarity-legendary { --frame: linear-gradient(120deg, #fff1b8, #c9971d 25%, #fff6cf 45%, #a87412 65%, #ffe9a3 85%, #c9971d); --tint: #2a1f08; --accent: #ffd66b; }
+.ccard.rarity-uncommon { --frame: linear-gradient(135deg, #c8f2d6, #2e9c5a 40%, #e2fbe9 60%, #237a46); --tint: #10261a; --accent: #8fe0ad; --gem: #5fd08a; }
+.ccard.rarity-rare {
+  --frame: linear-gradient(135deg, #a9c4ff, #2f5597 35%, #c6f2ff 55%, #3b62c9 75%, #a9c4ff);
+  --tint: #0f1c3d; --accent: #9fc0ff; --gem: #6fa0ff; --rim: 6px;
+}
+.ccard.rarity-epic {
+  --frame: linear-gradient(135deg, #e6c8ff, #7b3fc4 35%, #f6e6ff 55%, #5b2a9a 75%, #d3a8ff);
+  --tint: #1c0d33; --accent: #dcb8ff; --gem: #c08bff; --rim: 7px;
+}
+.ccard.rarity-legendary {
+  --frame: linear-gradient(120deg, #fff1b8, #c9971d 25%, #fff6cf 45%, #a87412 65%, #ffe9a3 85%, #c9971d);
+  --tint: #241904; --accent: #ffd66b; --gem: #ffcf4a; --rim: 8px;
+}
 .ccard.rarity-mythic {
   --frame: linear-gradient(120deg, #2f5597, #ffffff, #c8313b, #ffd66b, #7b3fc4, #3fd0c9, #2f5597);
-  --tint: #0e0b1c; --accent: #fff;
+  --tint: #0b0918; --accent: #fff; --gem: #fff; --rim: 8px;
 }
 .ccard-inner { position: relative; width: 100%; height: 100%; transition: transform 0.6s; transform-style: preserve-3d; }
 .ccard.flipped .ccard-inner { transform: rotateY(180deg); }
 .ccard:not(.locked):hover .ccard-inner { transform: translateY(-4px); }
 .ccard.flipped:not(.locked):hover .ccard-inner { transform: rotateY(180deg) translateY(-4px); }
 .ccard-face {
-  position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px; overflow: hidden;
-  border: 4px solid transparent;
+  position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; overflow: hidden;
+  border: var(--rim) solid transparent;
   background: linear-gradient(var(--tint), var(--tint)) padding-box, var(--frame) border-box;
   background-size: 100% 100%, 300% 300%;
   box-shadow: 0 14px 34px rgba(20, 27, 45, 0.28), 0 2px 6px rgba(20, 27, 45, 0.12);
 }
 .ccard.rarity-epic .ccard-face, .ccard.rarity-legendary .ccard-face { animation: goldFrame 5s linear infinite; }
-.ccard.rarity-mythic .ccard-face { animation: goldFrame 2.6s linear infinite; box-shadow: 0 0 22px rgba(255, 255, 255, 0.45), 0 14px 34px rgba(20, 27, 45, 0.35); }
-.ccard-front {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 40px 14px 12px; gap: 8px;
+.ccard.rarity-legendary .ccard-face { box-shadow: 0 0 18px rgba(255, 200, 70, 0.45), 0 14px 34px rgba(20, 27, 45, 0.32); }
+.ccard.rarity-mythic .ccard-face { animation: goldFrame 2.6s linear infinite, mythicGlow 3s ease-in-out infinite; }
+.ccard-front { display: flex; flex-direction: column; }
+
+/* La photo, en grand */
+.ccard-art {
+  position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
+  margin: 4px 4px 0; border-radius: 12px 12px 6px 6px;
+  background: color-mix(in srgb, var(--party) 40%, #0b0f1a);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
-.ccard-pattern {
-  position: absolute; inset: 0; pointer-events: none;
+.ccard-art::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 4; background: var(--party);
+}
+.ccard-art > img, .ccard-art > .portrait-fallback {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 22%; display: block;
+  transition: transform 0.6s ease;
+}
+.ccard:not(.locked):hover .ccard-art > img { transform: scale(1.06); }
+.ccard-art > .portrait-fallback { display: flex; align-items: center; justify-content: center; }
+.ccard-art > .portrait-fallback span { font-size: 56px; opacity: 0.8; }
+.ccard.rarity-common .ccard-art > img { filter: saturate(0.9); }
+.ccard.rarity-legendary .ccard-art > img { filter: sepia(0.2) saturate(1.2) contrast(1.06); }
+.ccard.rarity-mythic .ccard-art > img { filter: contrast(1.1) saturate(1.25); }
+.ccard.rarity-legendary .ccard-art { box-shadow: inset 0 0 0 2px #ffd66b, inset 0 0 26px rgba(255, 200, 70, 0.45); }
+.ccard.rarity-mythic .ccard-art { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85), inset 0 0 30px rgba(120, 160, 255, 0.5); }
+.ccard-art-fade {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 24%, transparent 56%, rgba(5, 8, 16, 0.94) 100%);
+}
+
+/* Reflet holographique : de rien (commune) à l'arc-en-ciel (mythique) */
+.ccard-foil { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0; }
+.ccard.rarity-rare .ccard-foil {
+  opacity: 0.35; mix-blend-mode: soft-light;
+  background: linear-gradient(135deg, transparent 30%, rgba(160, 200, 255, 0.9) 50%, transparent 70%);
+  background-size: 250% 250%; animation: foilSlide 6s ease-in-out infinite;
+}
+.ccard.rarity-epic .ccard-foil {
+  opacity: 0.55; mix-blend-mode: color-dodge;
   background:
-    radial-gradient(circle at 50% 26%, color-mix(in srgb, var(--party) 70%, transparent), transparent 46%),
-    repeating-linear-gradient(115deg, transparent 0 11px, rgba(255, 255, 255, 0.045) 11px 12px);
+    repeating-linear-gradient(115deg, transparent 0 7px, rgba(200, 150, 255, 0.4) 7px 9px),
+    linear-gradient(135deg, transparent 25%, rgba(210, 160, 255, 0.7) 50%, transparent 75%);
+  background-size: 100% 100%, 250% 250%; animation: foilSlide 5s ease-in-out infinite;
 }
-.ccard-portrait {
-  position: relative; z-index: 3; width: 128px; height: 128px; flex: none; border-radius: 50%; overflow: hidden;
-  background: var(--frame); background-size: 300% 300%;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--party) 75%, #fff), 0 10px 22px rgba(0, 0, 0, 0.45);
+.ccard.rarity-legendary .ccard-foil {
+  opacity: 0.6; mix-blend-mode: color-dodge;
+  background:
+    radial-gradient(circle, rgba(255, 230, 150, 0.9) 0 1px, transparent 1.6px) 0 0 / 14px 14px,
+    radial-gradient(circle, rgba(255, 240, 190, 0.7) 0 1px, transparent 1.6px) 7px 7px / 14px 14px,
+    linear-gradient(120deg, transparent 25%, rgba(255, 210, 90, 0.75) 50%, transparent 75%) 0 0 / 250% 250%;
+  animation: foilSlide 4.5s ease-in-out infinite;
 }
-.ccard.rarity-epic .ccard-portrait,
-.ccard.rarity-legendary .ccard-portrait,
-.ccard.rarity-mythic .ccard-portrait { animation: goldFrame 5s linear infinite; }
-.ccard.rarity-mythic .ccard-portrait { animation-duration: 2.6s; }
-.ccard-portrait img, .ccard-portrait .portrait-fallback {
-  position: absolute; inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px);
-  border-radius: 50%; object-fit: cover; object-position: center 28%; display: block;
+.ccard.rarity-mythic .ccard-foil {
+  opacity: 0.28; mix-blend-mode: color-dodge;
+  background: linear-gradient(115deg, #ff5a63, #ffd66b, #6dffb4, #5bd0ff, #8f6bff, #ff6bd5, #ff5a63);
+  background-size: 300% 300%; animation: foilSlide 3.5s linear infinite, hue 6s linear infinite;
 }
-.ccard-portrait .portrait-fallback { display: flex; align-items: center; justify-content: center; }
-.ccard-portrait .portrait-fallback span { font-size: 36px; }
-.ccard.rarity-legendary .ccard-portrait img { filter: sepia(0.18) saturate(1.15) contrast(1.05); }
-.ccard.rarity-mythic .ccard-portrait img { filter: contrast(1.08) saturate(1.2); }
-.ccard-shine { position: absolute; inset: 0; pointer-events: none; z-index: 4; border-radius: inherit; }
+
+.ccard-shine { position: absolute; inset: 0; pointer-events: none; z-index: 6; border-radius: inherit; }
 .ccard:not(.rarity-common):not(.locked) .ccard-shine {
   background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.28) 45%, transparent 60%);
   background-size: 250% 100%; animation: shine 3.4s ease-in-out infinite;
@@ -564,30 +607,57 @@ button { font-family: inherit; }
   background: linear-gradient(115deg, transparent 25%, rgba(47, 85, 151, 0.35) 38%, rgba(255, 255, 255, 0.5) 46%, rgba(200, 49, 59, 0.35) 54%, transparent 66%);
   background-size: 250% 100%; animation-duration: 2s;
 }
-.ccard-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 5; }
-.ccard-rarity { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; padding: 2px 9px; border-radius: 999px; background: rgba(0, 0, 0, 0.55); color: var(--accent); }
-.ccard-party { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; padding: 2px 9px; border-radius: 999px; background: var(--party); color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7); }
-.ccard-badges { position: absolute; top: 36px; right: 10px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 5; }
+.ccard-top { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; z-index: 5; }
+.ccard-rarity {
+  display: inline-flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 3px 8px 3px 6px; border-radius: 999px; color: var(--accent);
+  background: rgba(5, 8, 16, 0.72); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  backdrop-filter: blur(4px);
+}
+.ccard-gems { display: inline-flex; gap: 2px; flex: none; }
+.ccard-gems i {
+  display: block; width: 6px; height: 6px; transform: rotate(45deg); border-radius: 1px;
+  background: var(--gem); box-shadow: 0 0 5px var(--gem);
+}
+.ccard.rarity-common .ccard-gems i { box-shadow: none; }
+.ccard.rarity-mythic .ccard-gems i:nth-child(1) { background: #5b8cff; box-shadow: 0 0 6px #5b8cff; }
+.ccard.rarity-mythic .ccard-gems i:nth-child(2) { background: #fff; box-shadow: 0 0 6px #fff; }
+.ccard.rarity-mythic .ccard-gems i:nth-child(3) { background: #ff5a63; box-shadow: 0 0 6px #ff5a63; }
+.ccard.rarity-mythic .ccard-gems i:nth-child(4) { background: #ffd66b; box-shadow: 0 0 6px #ffd66b; }
+.ccard.rarity-mythic .ccard-gems i:nth-child(5) { background: #c08bff; box-shadow: 0 0 6px #c08bff; }
+.ccard.rarity-legendary .ccard-rarity { background: linear-gradient(90deg, #6b4a08, #a87412); color: #fff3c4; box-shadow: 0 0 0 1px #ffd66b, 0 0 12px rgba(255, 200, 70, 0.6); }
+.ccard.rarity-mythic .ccard-rarity { background: linear-gradient(90deg, #2f5597, #7b3fc4, #c8313b); color: #fff; box-shadow: 0 0 0 1px #fff, 0 0 14px rgba(255, 255, 255, 0.6); }
+.ccard-party { flex: none; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 3px 9px; border-radius: 999px; background: var(--party); color: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75), 0 2px 6px rgba(0, 0, 0, 0.35); }
+.ccard-badges { position: absolute; top: 36px; right: 8px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; z-index: 5; }
 .new-tag, .copies-tag.light {
   font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 2px 7px; border-radius: 999px; background: #fff; color: var(--ink);
 }
 .ccard-nameplate {
-  position: relative; z-index: 3; width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
-  padding: 4px 2px 0; border-bottom: 2px solid var(--party);
+  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 5;
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;
 }
-.ccard-nameplate strong { font-size: 16px; line-height: 1.15; letter-spacing: -0.01em; }
-.ccard-nameplate span { font-size: 13px; color: var(--accent); font-weight: 600; flex: none; }
+.ccard-nameplate strong {
+  font-size: 19px; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.ccard-nameplate span {
+  flex: none; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 7px; border-radius: 6px; color: var(--tint); background: var(--accent);
+}
+.ccard.rarity-legendary .ccard-nameplate strong { color: #fff3c4; text-shadow: 0 0 14px rgba(255, 200, 70, 0.7), 0 2px 8px rgba(0, 0, 0, 0.8); }
+.ccard.rarity-mythic .ccard-nameplate strong { text-shadow: 0 0 12px rgba(120, 160, 255, 0.9), 0 0 22px rgba(255, 90, 99, 0.6), 0 2px 8px rgba(0, 0, 0, 0.8); }
 .ccard-quote {
-  position: relative; z-index: 3; margin: auto 0 0; width: 100%;
-  padding: 8px 10px; border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16);
-  font-size: 15px; line-height: 1.25; font-style: italic; text-align: center;
-  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+  position: relative; z-index: 3; flex: none; margin: 9px 12px 11px;
+  padding: 0;
+  font-size: 14px; line-height: 1.28; font-style: italic; text-align: center;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
+.ccard.rarity-legendary .ccard-quote { color: #fff3c4; }
 .ccard-back { transform: rotateY(180deg); padding: 16px; display: flex; flex-direction: column; gap: 2px; }
 .ccard-back-head { display: flex; align-items: center; gap: 10px; }
-.ccard-back-portrait { width: 46px; height: 46px; flex: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px var(--party); }
+.ccard-back-portrait { width: 46px; height: 46px; flex: none; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 2px var(--party); }
 .ccard-back-portrait img, .ccard-back-portrait .portrait-fallback { width: 100%; height: 100%; object-fit: cover; object-position: center 28%; }
 .ccard-back-portrait .portrait-fallback span { font-size: 16px; }
 .ccard-back-name { font-size: 18px; line-height: 1.15; }
@@ -599,12 +669,21 @@ button { font-family: inherit; }
 .ccard-credit { font-size: 11px; opacity: 0.7; margin: 0; }
 .ccard.locked { cursor: default; }
 .ccard.locked .ccard-face { animation: none; background: linear-gradient(#20242c, #20242c) padding-box, var(--frame) border-box; opacity: 0.85; }
-.ccard.locked .ccard-portrait img, .ccard.locked .ccard-portrait .portrait-fallback { filter: grayscale(1) brightness(0.35); }
+.ccard.locked .ccard-art > img, .ccard.locked .ccard-art > .portrait-fallback { filter: grayscale(1) brightness(0.3) blur(1px); }
+.ccard.locked .ccard-foil { display: none; }
 .ccard.locked .ccard-quote { font-style: normal; letter-spacing: 0.04em; opacity: 0.7; }
 .ccard-lock {
-  position: absolute; inset: 5px; border-radius: 50%; z-index: 6;
-  display: flex; align-items: center; justify-content: center; font-size: 26px;
-  background: rgba(0, 0, 0, 0.35);
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center; font-size: 30px;
+}
+
+@keyframes foilSlide { 0%, 100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
+@keyframes mythicGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(91, 140, 255, 0.6), 0 14px 34px rgba(20, 27, 45, 0.35); }
+  50% { box-shadow: 0 0 26px rgba(255, 90, 99, 0.65), 0 14px 34px rgba(20, 27, 45, 0.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccard-face, .ccard-foil, .ccard-shine { animation: none !important; }
 }
 
 /* Choix des personnalités : badge de parti sur la photo */
@@ -667,14 +746,18 @@ button { font-family: inherit; }
 @keyframes hue { to { filter: hue-rotate(360deg); } }
 
 @media (max-width: 720px) {
-  .ccard { width: 168px; height: 280px; }
-  .ccard-front { padding: 34px 10px 8px; gap: 6px; }
-  .ccard-portrait { width: 96px; height: 96px; }
-  .ccard-nameplate strong { font-size: 13px; }
-  .ccard-quote { font-size: 12px; -webkit-line-clamp: 4; padding: 6px 8px; }
-  .ccard-rarity, .ccard-party { font-size: 10px; padding: 1px 7px; }
-  .ccard-badges { top: 32px; }
-  .ccard-lock { font-size: 20px; }
+  .ccard { width: 168px; height: 280px; --rim: 4px; }
+  .ccard.rarity-epic, .ccard.rarity-legendary, .ccard.rarity-mythic { --rim: 5px; }
+  .ccard-nameplate { left: 8px; right: 8px; bottom: 8px; }
+  .ccard-nameplate strong { font-size: 14px; }
+  .ccard-nameplate span { font-size: 10px; padding: 1px 5px; }
+  .ccard-quote { font-size: 12px; -webkit-line-clamp: 3; margin: 6px 8px 8px; }
+  .ccard-top { top: 6px; left: 6px; right: 6px; gap: 4px; }
+  .ccard-rarity { font-size: 8px; letter-spacing: 0.03em; padding: 2px 6px 2px 5px; gap: 3px; }
+  .ccard-gems i { width: 4px; height: 4px; }
+  .ccard-party { font-size: 10px; padding: 1px 7px; }
+  .ccard-badges { top: 30px; }
+  .ccard-lock { font-size: 22px; }
 }
 
 /* Ordinateur : l'essentiel tient dans la fenêtre, le catalogue défile ensuite. */
@@ -774,17 +857,15 @@ button { font-family: inherit; }
   .game .reveal h2 { font-size: 22px; }
   .game .reveal p { margin: 4px 0; }
   .game .reveal-card .ccard { width: 158px; height: 236px; }
-  .game .reveal-card .ccard-front { padding: 30px 8px 8px; gap: 4px; }
-  .game .reveal-card .ccard-portrait { width: 84px; height: 84px; }
-  .game .reveal-card .ccard-nameplate strong { font-size: 13px; }
-  .game .reveal-card .ccard-quote { font-size: 12px; -webkit-line-clamp: 3; padding: 5px 6px; }
+  .game .reveal-card .ccard-nameplate strong { font-size: 14px; }
+  .game .reveal-card .ccard-rarity { font-size: 8.5px; }
+  .game .reveal-card .ccard-quote { font-size: 12px; -webkit-line-clamp: 3; margin: 5px 6px; }
   .stats { margin: 8px 0; gap: 28px; }
   .stats strong { font-size: 32px; }
 }
 
 @media (min-width: 980px) and (min-height: 980px) {
   .game .reveal-card .ccard { width: 200px; height: 300px; }
-  .game .reveal-card .ccard-portrait { width: 108px; height: 108px; }
   .game:has(.reveal) .person-photo { height: 140px; }
 }
 

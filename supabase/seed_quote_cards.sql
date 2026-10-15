@@ -1,5 +1,7 @@
 -- ============================================================================
--- Cartes « personnalité + citation » : contenu de départ (32 cartes)
+-- Cartes « personnalité + citation » : contenu de départ (32 cartes).
+-- Quinze cartes supplémentaires (autres personnalités, photo propre à chaque citation)
+-- sont dans la migration 20261015000900_more_quote_cards.sql.
 --
 -- Citations célèbres de la vie politique française, retenues parce qu'elles sont
 -- largement documentées (archives audiovisuelles, presse). Rareté selon le
@@ -152,6 +154,68 @@ from (values
   ('On met un pognon de dingue dans des minima sociaux, et les gens ne s''en sortent pas.', 'Emmanuel Macron in Washington - 2018 (26809923797) (cropped).jpg', 'U.S. Department of State', 'Domaine public'),
   ('Les non-vaccinés, j''ai très envie de les emmerder.', 'Emmanuel Macron (2022-02-07) (cropped).jpg', 'Presidential Executive Office of Russia', 'CC BY 4.0'),
   ('Je traverse la rue, je vous en trouve.', 'Emmanuel Macron in November 2018 (cropped).jpg', 'The Kremlin, Moscow', 'CC BY 4.0'),
-  ('Je ne céderai rien, ni aux fainéants, ni aux cyniques, ni aux extrêmes.', 'Emmanuel Macron (32605283887) (cropped).jpg', 'Jacques Paquier', 'CC BY 2.0')
+  ('Je ne céderai rien, ni aux fainéants, ni aux cyniques, ni aux extrêmes.', 'Emmanuel Macron (32605283887) (cropped).jpg', 'Jacques Paquier', 'CC BY 2.0'),
+  ('Je vous ai compris !', 'Photo PLM+CDG 1.jpg', 'Auteur inconnu', 'CC0'),
+  ('Paris outragé ! Paris brisé ! Paris martyrisé ! Mais Paris libéré !', 'De Gaulle-OWI (3x4 cropped).jpg', 'Office of War Information', 'Domaine public'),
+  ('Vive le Québec libre !', 'Charles de Gaulle-1963.jpg', 'Ludwig Wegmann (Bundesarchiv)', 'CC BY-SA 3.0 DE'),
+  ('Vous n''avez pas, monsieur Mitterrand, le monopole du cœur.', 'Valéry Giscard d''Estaing, energy crisis summit at Elysée, 1974.jpg', 'Christian Lambiotte / Commission européenne', 'CC BY 4.0'),
+  ('Au revoir.', 'Valéry Giscard d''Estaing 1981 (1).jpg', 'Rob Croes / Anefo', 'CC0'),
+  ('La République, c''est moi !', 'Jean-Luc Mélenchon 2017.jpg', 'MathieuMD', 'CC BY-SA 4.0'),
+  ('Ma personne est sacrée !', 'Jean-Luc Mélenchon (Place au Peuple) 001 (redécoupé).jpg', 'Place au Peuple', 'CC BY-SA 2.0'),
+  ('Casse-toi alors, pauvre con !', 'Nicolas Sarkozy (2008).jpg', 'Aleph', 'CC BY-SA 2.5'),
+  ('Dès demain, on va nettoyer au Kärcher la cité.', 'Nicolas Sarkozy, French Minister of the Interior - 2003.jpg', 'Christian Lambiotte / Commission européenne', 'CC BY 4.0'),
+  ('Désormais, quand il y a une grève en France, personne ne s''en aperçoit.', 'Nicolas Sarkozy, 2007.jpg', 'Jean-Louis Aubert', 'CC BY-SA 2.0'),
+  ('Moi, président de la République, je ne serai pas le chef de la majorité.', 'François Hollande (1).JPG', 'Rémi Jouan', 'CC BY-SA 3.0'),
+  ('Mon véritable adversaire, il n''a pas de nom, pas de visage, pas de parti. […] Cet adversaire, c''est le monde de la finance.', 'François Hollande (2007).jpg', 'Guillaume Paumier', 'CC BY-SA 2.5'),
+  ('Mais vous avez tout à fait raison, monsieur le Premier ministre.', 'François Mitterrand, 1984.jpg', 'Gino Zamboni / Commission européenne', 'CC BY 4.0'),
+  ('Je crois aux forces de l''esprit et je ne vous quitterai pas.', 'François Mitterrand, Strasbourg, dec. 1989, 1.jpg', 'Christian Lambiotte / Commission européenne', 'CC BY 4.0'),
+  ('Notre maison brûle et nous regardons ailleurs.', 'Jacques Chirac, 1999.jpg', 'David Scull', 'Domaine public'),
+  ('Aujourd''hui, on rapporte une histoire abracadabrantesque.', 'Jacques Chirac1.jpg', 'Roland Godefroy', 'CC BY 3.0'),
+  ('J''assume pleinement la responsabilité de cet échec et j''en tire les conclusions, en me retirant de la vie politique après la fin de l''élection présidentielle.', 'Lionel Jospin, mai 2014, Rennes, France (cropped).jpg', 'Édouard Hue', 'CC BY-SA 4.0'),
+  ('Je suis socialiste d''inspiration, mais le projet que je propose au pays n''est pas un projet socialiste.', 'Lionel Jospin, le 30 septembre 1997.jpg', 'Moulins58', 'CC BY-SA 3.0')
 ) as v(text, file, credit, license)
 where c.text = v.text;
+
+-- Les cartes ajoutées par 20261015000900 peuvent avoir été insérées avant ce seed :
+-- on rattache le parti et le piège éditorial maintenant que tout le monde existe.
+update public.politicians p set party_id = (select id from public.parties where slug = v.party)
+from (values
+  ('arlette-laguiller', 'lo'),
+  ('christiane-taubira', 'prg'),
+  ('jean-pierre-raffarin', 'lr'),
+  ('francois-fillon', 'lr'),
+  ('philippe-poutou', 'npa'),
+  ('jean-lassalle', 'resistons'),
+  ('georges-marchais', 'pcf'),
+  ('alain-juppe', 'lr')
+) as v(slug, party)
+where p.slug = v.slug and p.party_id is null
+  and exists (select 1 from public.parties where slug = v.party);
+
+update public.politicians p set role = v.role
+from (values
+  ('edouard-philippe', 'Premier ministre (2017-2020)'),
+  ('gabriel-attal',    'Premier ministre (2024)'),
+  ('fabien-roussel',   'Secrétaire national du PCF')
+) as v(slug, role)
+where p.slug = v.slug and p.role is null;
+
+update public.cards c set decoy_politician_id = (select id from public.politicians where slug = v.decoy)
+from (values
+  ('Politique intérieure, je fais la guerre ; politique étrangère, je fais la guerre.', 'charles-de-gaulle'),
+  ('Gouverner, c''est choisir.', 'charles-de-gaulle'),
+  ('Travailleuses, travailleurs !', 'philippe-poutou'),
+  ('Parfois résister c''est rester, parfois résister c''est partir.', 'robert-badinter'),
+  ('Notre route est droite, mais la pente est forte.', 'jacques-chirac'),
+  ('Qui imagine un seul instant le général de Gaulle mis en examen ?', 'nicolas-sarkozy'),
+  ('Nous, quand on est convoqué par la police, nous n''avons pas d''immunité ouvrière, on y va.', 'jean-luc-melenchon'),
+  ('Un ministre, ça ferme sa gueule. Si ça veut l''ouvrir, ça démissionne.', 'michel-rocard'),
+  ('Je suis fils de berger, frère de berger et je l''ai été moi-même.', 'francois-bayrou'),
+  ('Le bilan des pays socialistes est globalement positif.', 'francois-mitterrand'),
+  ('Je reste droit dans mes bottes et je ferai mon travail.', 'jacques-chirac'),
+  ('Un bon vin, une bonne viande, un bon fromage : c''est la gastronomie française.', 'jean-luc-melenchon'),
+  ('Nous allons devoir vivre avec le virus.', 'emmanuel-macron'),
+  ('Travailler plus pour gagner plus.', 'francois-fillon'),
+  ('L''école est la mère des batailles.', 'emmanuel-macron')
+) as v(text, decoy)
+where c.text = v.text and c.decoy_politician_id is null;
