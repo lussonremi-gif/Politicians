@@ -1880,3 +1880,31 @@ body:has(.shop.fit) .page { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .bo-card, .bo-card::before, .wo-slot > * { animation-duration: 0.01s !important; }
 }
+
+/* Boutique, ordinateur : des packs aux proportions de vrais boosters (plus hauts que larges),
+   centrés ; la partie blanche se limite aux chances et au bouton. */
+@media (min-width: 721px) {
+  .shop .rarity-grid {
+    grid-template-columns: repeat(4, minmax(0, clamp(210px, 27vh, 300px))); justify-content: center; align-content: center;
+    align-items: start; gap: clamp(16px, 2.2vw, 32px);
+  }
+  .rarity-booster { height: auto; }
+  .rarity-booster-inner { flex: none; }
+  .rarity-booster .booster-pack { height: clamp(150px, 34vh, 340px); }
+  .pack-rarity { font-size: clamp(24px, 2.4vw, 34px); }
+  .odds-bars { flex: none; padding: 10px 14px 4px; }
+}
+
+/* Boutique, ordinateur : des packs aux proportions de vrais boosters (plus hauts que larges),
+   centrés ; la partie blanche se limite aux chances et au bouton. */
+@media (min-width: 721px) {
+  .shop .rarity-grid {
+    grid-template-columns: repeat(4, minmax(0, clamp(210px, 27vh, 300px))); justify-content: center; align-content: center;
+    align-items: start; gap: clamp(16px, 2.2vw, 32px);
+  }
+  .rarity-booster { height: auto; }
+  .rarity-booster-inner { flex: none; }
+  .rarity-booster .booster-pack { height: clamp(150px, 34vh, 340px); }
+  .pack-rarity { font-size: clamp(24px, 2.4vw, 34px); }
+  .odds-bars { flex: none; padding: 10px 14px 4px; }
+}
