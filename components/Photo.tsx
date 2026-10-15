@@ -40,15 +40,24 @@ export function Photo({
       </div>
     );
   }
+
+  // Wikimedia : version un peu plus nette pour les portraits de duel.
+  let hiRes = current;
+  if (current.includes("Special:FilePath/")) {
+    hiRes = /[?&]width=\d+/i.test(current)
+      ? current.replace(/([?&])width=\d+/i, "$1width=800")
+      : `${current}${current.includes("?") ? "&" : "?"}width=800`;
+  }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       className={className}
-      src={current}
+      src={hiRes}
       alt={name}
       loading="lazy"
       referrerPolicy="no-referrer"
-      style={focus ? { objectPosition: focus } : undefined}
+      style={{ objectPosition: focus || "center 28%" }}
       onError={() => setAttempt((a) => a + 1)}
     />
   );
