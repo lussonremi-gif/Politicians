@@ -44,26 +44,31 @@ function BoosterTile({
 }) {
   const rarity = boosterRarity(b);
   return (
-    <article className={`booster rarity-booster rb-${rarity}`} style={{ ["--accent" as string]: boosterAccent(b) }}>
-      <div className="booster-pack" aria-hidden>
-        <span className="tricolor small" />
-        <span className="pack-rarity">{RARITY_LABEL[rarity]}</span>
-        <span className="pack-label">{b.card_count} cartes</span>
+    <article className={`rarity-booster rb-${rarity}`} style={{ ["--accent" as string]: boosterAccent(b) }}>
+      <div className="rarity-booster-inner">
+        <div className="booster-pack" aria-hidden>
+          <span className="pack-foil" />
+          <span className="pack-fold" />
+          <span className="pack-seal">{b.card_count}</span>
+          <span className="pack-rarity">{RARITY_LABEL[rarity]}</span>
+          <span className="pack-label">cartes</span>
+        </div>
+        <p className="booster-guarantee">
+          {b.guarantee ? `Au moins 1 ${RARITY_LABEL[rarity].toLowerCase()}` : "Pour compléter sa collection"}
+        </p>
+        <ul className="odds-bars" aria-label="Probabilités par carte">
+          {odds(b).map(({ r, p }) => (
+            <li key={r} className={`odd rarity-${r}`}>
+              <span>{RARITY_LABEL[r]}</span>
+              <i style={{ width: `${p}%` }} />
+              <b>{p}%</b>
+            </li>
+          ))}
+        </ul>
+        <button className="pack-open" disabled={points < b.price || busy} onClick={() => onOpen(b)}>
+          Ouvrir · {b.price.toLocaleString("fr-FR")} pts
+        </button>
       </div>
-      <h3>{b.name}</h3>
-      <p className="booster-guarantee">{b.guarantee ? `Au moins 1 ${RARITY_LABEL[rarity].toLowerCase()}` : "Pour compléter sa collection"}</p>
-      <ul className="odds-bars" aria-label="Probabilités par carte">
-        {odds(b).map(({ r, p }) => (
-          <li key={r} className={`odd rarity-${r}`}>
-            <span>{RARITY_LABEL[r]}</span>
-            <i style={{ width: `${p}%` }} />
-            <b>{p}%</b>
-          </li>
-        ))}
-      </ul>
-      <button className="btn primary" disabled={points < b.price || busy} onClick={() => onOpen(b)}>
-        Ouvrir · {b.price.toLocaleString("fr-FR")} pts
-      </button>
     </article>
   );
 }
