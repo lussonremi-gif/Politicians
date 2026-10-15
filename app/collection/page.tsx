@@ -16,7 +16,8 @@ const TABS: Rarity[] = [...RARITIES].reverse();
 
 function Collection() {
   const [rows, setRows] = useState<AlbumRow[] | null>(null);
-  const [rarity, setRarity] = useState<Rarity | null>(null);
+  // « all » : toutes les cartes d'un coup, de la plus rare à la plus commune
+  const [rarity, setRarity] = useState<Rarity | "all">("all");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,9 +41,8 @@ function Collection() {
   if (!rows) return <p className="muted center">Chargement de l&apos;album…</p>;
 
   const owned = rows.filter((r) => r.copies > 0).length;
-  // Onglet par défaut : la rareté la plus haute dont on possède une carte
-  const active = rarity ?? TABS.find((r) => byRarity.get(r)!.some((c) => c.copies > 0)) ?? "common";
-  const list = byRarity.get(active)!;
+  const active = rarity;
+  const list = active === "all" ? TABS.flatMap((r) => byRarity.get(r)!) : byRarity.get(active)!;
 
   return (
     <section className="collection fit">
@@ -55,6 +55,17 @@ function Collection() {
           <div style={{ width: `${rows.length ? (owned / rows.length) * 100 : 0}%` }} />
         </div>
         <div className="rarity-tabs" role="tablist">
+          <button
+            role="tab"
+            aria-selected={active === "all"}
+            className={`rarity-tab ${active === "all" ? "active" : ""}`}
+            onClick={() => setRarity("all")}
+          >
+            <span>Toutes</span>
+            <small>
+              {owned}/{rows.length}
+            </small>
+          </button>
           {TABS.map((r) => {
             const all = byRarity.get(r)!;
             return (
@@ -82,6 +93,14 @@ function Collection() {
             <Link href="/jouer" className="btn primary">Jouer</Link>
             <Link href="/boosters" className="btn">Ouvrir un booster</Link>
           </div>
+        </div>
+      ) : active === "all" ? (
+        <div className="album-all">
+          {list.map((c) => (
+            <div key={c.card_id} className="album-all-cell">
+              <CollectibleCard card={c} locked={c.copies === 0} />
+            </div>
+          ))}
         </div>
       ) : (
         <CardPager

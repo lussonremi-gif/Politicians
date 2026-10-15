@@ -12,6 +12,12 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+/** Wikimedia : version un peu plus nette pour les portraits (même URL que celle affichée, pour le préchargement). */
+export function photoSrc(url: string) {
+  if (!url.includes("Special:FilePath/")) return url;
+  return /[?&]width=\d+/i.test(url) ? url.replace(/([?&])width=\d+/i, "$1width=800") : `${url}${url.includes("?") ? "&" : "?"}width=800`;
+}
+
 /**
  * Photo d'une personnalité. Si l'image ne charge pas, essaie la photo de repli
  * (photo générale de la personnalité), puis affiche un monogramme.
@@ -22,12 +28,15 @@ export function Photo({
   className,
   fallbackSrc,
   focus,
+  placeholder,
 }: {
   src: string | null;
   name: string;
   className?: string;
   fallbackSrc?: string | null;
   focus?: string | null;
+  // Remplace le monogramme quand il n'y a pas de photo (ex. 🎬 pour un personnage de film)
+  placeholder?: string;
 }) {
   const candidates = [src, fallbackSrc].filter((s, i, all): s is string => !!s && all.indexOf(s) === i);
   const [attempt, setAttempt] = useState(0);
@@ -36,18 +45,12 @@ export function Photo({
   if (!current) {
     return (
       <div className={`portrait-fallback ${className ?? ""}`} aria-hidden>
-        <span>{initials(name)}</span>
+        <span>{placeholder ?? initials(name)}</span>
       </div>
     );
   }
 
-  // Wikimedia : version un peu plus nette pour les portraits de duel.
-  let hiRes = current;
-  if (current.includes("Special:FilePath/")) {
-    hiRes = /[?&]width=\d+/i.test(current)
-      ? current.replace(/([?&])width=\d+/i, "$1width=800")
-      : `${current}${current.includes("?") ? "&" : "?"}width=800`;
-  }
+  const hiRes = photoSrc(current);
 
   return (
     // eslint-disable-next-line @next/next/no-img-element

@@ -80,6 +80,9 @@ export type GameCard = {
   party_color: string | null;
   new?: boolean;
   copies?: number;
+  // false pour les pièges du quiz (répliques de films, célébrités) : jamais de carte
+  collectible?: boolean;
+  kind?: "politician" | "personality";
 };
 
 export type AnswerResult = {

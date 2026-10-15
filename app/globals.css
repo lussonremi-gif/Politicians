@@ -1795,3 +1795,88 @@ body:has(.shop.fit) .page { overflow: hidden; }
   body:has(.screen-fit) .page { padding-bottom: calc(var(--tabbar) + 8px); }
   .screen-fit .split-panels .panel { flex: 0 1 auto; }
 }
+
+/* QR code d'accès */
+.qr-overlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px; background: rgba(22, 25, 59, 0.55); backdrop-filter: blur(4px); animation: fadeIn 0.2s ease-out; }
+.qr-card { width: min(380px, 100%); background: var(--paper); border: 2.5px solid var(--ink); border-radius: 22px; box-shadow: var(--pop-lg); padding: 20px 20px 18px; text-align: center; animation: popIn 0.3s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.qr-kicker { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--red); }
+.qr-title { margin: 2px 0 12px; font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.qr-svg { display: block; width: min(280px, 72vw); height: auto; margin: 0 auto; border-radius: 12px; border: 2px solid var(--ink); }
+.qr-url { margin: 12px 0 14px; font-weight: 700; font-size: 15px; word-break: break-all; color: var(--muted); }
+.qr-actions { display: flex; gap: 10px; justify-content: center; }
+.trap-note { margin: 6px 0; padding: 6px 10px; border-radius: 10px; background: #fff3d6; border: 1.5px solid #e6b325; font-weight: 600; font-size: 15px; }
+
+/* Collection : vue « Toutes », toutes les cartes d'un coup dans une grille compacte */
+.album-all {
+  --z: 0.62;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  display: grid; grid-template-columns: repeat(auto-fill, calc(230px * var(--z))); grid-auto-rows: calc(360px * var(--z));
+  gap: 12px; justify-content: center; align-content: start; padding: 4px 4px 12px;
+}
+.album-all-cell { width: 230px; height: 360px; zoom: var(--z); }
+.album-all-cell .ccard { width: 230px; height: 360px; }
+/* Pas d'animations permanentes sur 160 cartes à la fois : fluidité d'abord */
+.album-all .ccard-face, .album-all .ccard-foil, .album-all .ccard-shine { animation: none !important; }
+@media (max-width: 720px) {
+  .album-all { --z: 0.47; gap: 8px; }
+}
+
+/* =====================================================================
+   OUVERTURE : fluidité (surtout sur téléphone)
+   Règle : on n'anime que transform et opacity (gérés par le GPU). Les halos sont des
+   calques à part dont on anime l'opacité, jamais des filter: drop-shadow/blur animés.
+   ===================================================================== */
+.bo-card, .wo-slot > *, .bo-aurora i, .bo-beams i, .bo-sparks i, .bo-warp { will-change: transform, opacity; }
+
+/* Entrée de la carte : transform + opacity seulement */
+@keyframes cardIn { from { opacity: 0; transform: scale(1.7); } to { opacity: 1; transform: none; } }
+@keyframes cardSpin { from { opacity: 0; transform: perspective(900px) rotateY(540deg) scale(0.3); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+.bo-card.enter-common { animation: cardIn 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.bo-card.enter-rare { animation: cardIn 0.65s cubic-bezier(0.16, 1, 0.3, 1); }
+.bo-card.enter-epic { animation: cardSpin 0.85s cubic-bezier(0.16, 1, 0.3, 1); }
+.bo-card.enter-legendary { animation: cardSpin 1s cubic-bezier(0.16, 1, 0.3, 1); }
+/* Halo derrière la carte : un dégradé dont on anime l'opacité et l'échelle */
+.bo-card::before {
+  content: ""; position: absolute; left: 50%; top: 42%; width: 520px; height: 520px; margin: -260px 0 0 -260px; z-index: -1;
+  border-radius: 50%; background: radial-gradient(circle, var(--c2) 0%, var(--c3) 35%, transparent 68%);
+  opacity: 0; animation: haloIn 1.6s ease-out forwards; pointer-events: none;
+}
+.bo-card.enter-common::before { animation-duration: 0.9s; }
+@keyframes haloIn { 0% { opacity: 0; transform: scale(0.4); } 30% { opacity: 1; } 100% { opacity: 0.55; transform: scale(1); } }
+.bo-card .ccard { filter: none; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); border-radius: 18px; }
+
+/* Indices : sortie sans flou */
+@keyframes clueOut { to { opacity: 0; transform: scale(1.25); } }
+@keyframes crestIn { 0% { transform: perspective(800px) rotateY(-100deg) scale(0.4); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.wo-crest { filter: none; }
+.wo-role-title { filter: none; text-shadow: 0 0 24px var(--c3), 0 4px 0 rgba(0, 0, 0, 0.3); color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; }
+.stage-legendary .wo-role-title { color: #ffe08a; }
+
+/* Décor : dégradés doux sans flou temps réel */
+.bo-aurora i { filter: none; }
+.bo-beams i { filter: none; mix-blend-mode: normal; }
+
+@media (max-width: 720px), (pointer: coarse) {
+  /* Moins de calques animés en même temps */
+  .bo-beams i:nth-child(n + 5) { display: none; }
+  .bo-beams i { width: 26vmax; opacity: 0.7; }
+  .bo-sparks i { box-shadow: none; }
+  .bo-sparks i:nth-child(n + 19) { display: none; }
+  .bo-aurora i:nth-child(3) { display: none; }
+  .bo-floor { animation: none; }
+  .bo-warp { width: 160vmax; height: 160vmax; margin: -80vmax 0 0 -80vmax; -webkit-mask-image: none; mask-image: none;
+    background: radial-gradient(circle, transparent 18%, var(--c3) 30%, transparent 46%); }
+  .bo-particles span { box-shadow: none !important; }
+  .bo-particles span:nth-child(n + 31) { display: none; }
+  .firework i { box-shadow: none; }
+  .firework:nth-child(n + 5) { display: none; }
+  .bo-card::before { width: 380px; height: 380px; margin: -190px 0 0 -190px; }
+  /* Pendant la révélation, la carte ne repeint pas son cadre/reflet en boucle */
+  .bo-card .ccard-face, .bo-card .ccard-foil { animation: none !important; }
+  .bo-card .ccard-shine { animation-delay: 1.2s; }
+  .wo.quake { animation-duration: 0.45s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bo-card, .bo-card::before, .wo-slot > * { animation-duration: 0.01s !important; }
+}

@@ -274,8 +274,15 @@ function Game({ initialKind }: { initialKind: PlayKind | null }) {
                 {result.multiplier > 1 && <span> · série ×{result.multiplier}</span>}
               </p>
             )}
-            {result.correct && (
-              <p className="muted">{result.new_card ? "Nouvelle carte ajoutée à votre collection." : "Carte déjà possédée : un exemplaire de plus."}</p>
+            {result.card.collectible === false ? (
+              <p className="trap-note">
+                Piège : {result.card.name}
+                {result.card.role ? ` (${result.card.role})` : ""} n&apos;est pas une personnalité politique. Pas de carte à gagner.
+              </p>
+            ) : (
+              result.correct && (
+                <p className="muted">{result.new_card ? "Nouvelle carte ajoutée à votre collection." : "Carte déjà possédée : un exemplaire de plus."}</p>
+              )
             )}
             <p className="source">
               Source :{" "}
@@ -291,7 +298,7 @@ function Game({ initialKind }: { initialKind: PlayKind | null }) {
               {question.position === question.total ? "Voir le résultat" : "Question suivante"}
             </button>
           </div>
-          {result.correct && (
+          {result.correct && result.card.collectible !== false && (
             <div className="reveal-card">
               <CollectibleCard card={{ ...result.card, new: result.new_card }} />
               <span className="muted small-text">Touchez la carte pour la retourner</span>

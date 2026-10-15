@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CollectibleCard } from "./CollectibleCard";
+import { photoSrc } from "./Photo";
 import { presentCard } from "@/lib/cardArt";
 import * as sfx from "@/lib/sfx";
 import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/types";
@@ -223,6 +224,21 @@ export function BoosterOpening({
     timers.current = [];
   };
   useEffect(() => clearTimers, []);
+
+  // Précharge les photos dès l'affichage du booster : la carte apparaît d'un coup, photo comprise
+  useEffect(() => {
+    const imgs = prepared
+      .map((c) => c.image_url ?? c.fallback_image_url)
+      .filter((u): u is string => !!u)
+      .map((u) => {
+        const img = new Image();
+        img.referrerPolicy = "no-referrer";
+        img.decoding = "async";
+        img.src = photoSrc(u);
+        return img;
+      });
+    return () => imgs.forEach((img) => (img.src = ""));
+  }, [prepared]);
 
   // Bloque le défilement de la page
   useEffect(() => {

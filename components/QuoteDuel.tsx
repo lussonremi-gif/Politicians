@@ -49,7 +49,7 @@ export function QuoteDuel({
             disabled={disabled}
           >
             <div className="person-photo">
-              <Photo src={opt.image_url} name={opt.name} focus={opt.image_focus} className="portrait-img" />
+              <Photo src={opt.image_url} name={opt.name} focus={opt.image_focus} className="portrait-img" placeholder={opt.kind === "personality" ? "🎬" : undefined} />
               {opt.kind === "personality" && <span className="person-tag">Hors politique</span>}
               {opt.party_short && (
                 <span className="person-party" style={{ ["--party" as string]: opt.party_color ?? "#8d939c" }}>

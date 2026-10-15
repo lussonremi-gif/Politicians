@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthProvider";
+import { InviteQr } from "./InviteQr";
 
 const NAV = [
   { href: "/jouer", label: "Jouer" },
@@ -44,32 +44,6 @@ function NavIcon({ name }: { name: string }) {
   );
 }
 
-/** Partage le lien du jeu (feuille de partage du téléphone, sinon copie dans le presse-papiers). */
-function ShareButton() {
-  const [copied, setCopied] = useState(false);
-  async function share() {
-    const url = window.location.origin;
-    const data = { title: "Qui l'a dit ?", text: "Une vraie citation, deux personnalités : qui l'a dit ?", url };
-    try {
-      if (navigator.share) {
-        await navigator.share(data);
-        return;
-      }
-    } catch {
-      /* partage annulé : on copie le lien */
-    }
-    await navigator.clipboard?.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-  return (
-    <button className="share-btn" onClick={share} aria-label="Partager le jeu">
-      <span aria-hidden>🔗</span>
-      <span className="share-label">{copied ? "Lien copié !" : "Partager"}</span>
-    </button>
-  );
-}
-
 export function Header() {
   const pathname = usePathname();
   const { profile } = useAuth();
@@ -92,7 +66,7 @@ export function Header() {
         ))}
       </nav>
       <div className="header-tools">
-        <ShareButton />
+        <InviteQr />
         {profile && (
           <Link
             href="/compte"
