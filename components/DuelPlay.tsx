@@ -49,7 +49,7 @@ function Lobby({ onOpen, embedded = false }: { onOpen: (id: string) => void; emb
     <section>
       {!embedded && (
         <div className="section-head">
-          <h1 className="headline">Multi</h1>
+          <h1 className="headline">Duel</h1>
           <span className="tricolor" aria-hidden />
         </div>
       )}
@@ -227,7 +227,7 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
   async function rematch() {
     const { data, error } = await getSupabase().rpc("create_duel", {});
     if (error) return setError(errorMessage(error));
-    window.location.href = `/multi?id=${(data as { id: string }).id}`;
+    window.location.href = `/jouer?id=${(data as { id: string }).id}`;
   }
 
   if (error && !state) {
@@ -243,7 +243,7 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
   const opponent = state.opponent_name ?? "Adversaire";
   const now = Date.now() + offset.current;
   const servedAt = state.served_at ? new Date(state.served_at).getTime() : 0;
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/multi?code=${state.code}` : "";
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/jouer?code=${state.code}` : "";
 
   if (state.status === "waiting") {
     async function share() {
@@ -371,18 +371,18 @@ export function DuelRoot({ embeddedLobby = false }: { embeddedLobby?: boolean })
       .rpc("join_duel", { p_code: code })
       .then(({ data, error }) => {
         if (error) setJoinError(errorMessage(error));
-        else router.replace(`/multi?id=${data as string}`);
+        else router.replace(`/jouer?id=${data as string}`);
       });
   }, [code, id, router]);
 
-  const leave = () => router.push("/multi");
+  const leave = () => router.push("/jouer?mode=duel");
 
   if (id) return <DuelRoom key={id} id={id} onLeave={leave} />;
   if (code && !joinError) return <p className="muted center">Connexion au duel…</p>;
   return (
     <>
       {joinError && <p className="notice error center">{joinError}</p>}
-      <Lobby embedded={embeddedLobby} onOpen={(duelId) => router.push(`/multi?id=${duelId}`)} />
+      <Lobby embedded={embeddedLobby} onOpen={(duelId) => router.push(`/jouer?id=${duelId}`)} />
     </>
   );
 }

@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const MODES = [
-  { href: "/solo", icon: "🎯", title: "Solo", text: "10 citations ou 60 secondes chrono. Trouvez qui a parlé.", color: "blue" },
-  { href: "/multi", icon: "⚔️", title: "Multi", text: "Défiez un ami en temps réel sur la même série.", color: "red" },
+  { href: "/jouer", icon: "🎯", title: "Jouer", text: "Solo ou duel : trouvez qui a parlé.", color: "blue" },
   { href: "/boosters", icon: "🎁", title: "Boosters", text: "Ouvrez des packs et visez la carte mythique.", color: "gold" },
   { href: "/collection", icon: "🃏", title: "Collection", text: "Toutes les phrases cultes, de commune à mythique.", color: "ink" },
+  { href: "/amis", icon: "👥", title: "Amis", text: "Classement et défis entre potes.", color: "red" },
 ];
 
 export default function Home() {
@@ -24,7 +24,7 @@ export default function Home() {
           gagner la carte.
         </p>
         <div className="actions">
-          <Link href="/solo" className="btn primary big">
+          <Link href="/jouer" className="btn primary big">
             Jouer maintenant
           </Link>
         </div>

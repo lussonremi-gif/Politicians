@@ -139,7 +139,7 @@ function Collection() {
         <div className="center">
           <p className="muted">Aucune carte ici pour l&apos;instant.</p>
           <div className="actions">
-            <Link href="/solo" className="btn primary">Jouer en solo</Link>
+            <Link href="/jouer" className="btn primary">Jouer</Link>
             <Link href="/boosters" className="btn">Ouvrir un booster</Link>
           </div>
         </div>

@@ -1,16 +1,18 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { Suspense } from "react";
-import { DuelRoot } from "@/components/DuelPlay";
-import { Gate } from "@/components/Gate";
-
-/** Mode Multi : duel 1 contre 1 en temps réel (création, invitation, partie, résultat). */
-export default function MultiPage() {
-  return (
-    <Gate>
-      <Suspense fallback={<p className="muted center">Chargement…</p>}>
-        <DuelRoot />
-      </Suspense>
-    </Gate>
-  );
+/** Ancienne adresse Multi → écran Jouer (duel), en conservant id/code. */
+export default async function MultiRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === "string") qs.set(key, value);
+    else if (Array.isArray(value)) for (const item of value) qs.append(key, item);
+  }
+  if (!qs.has("id") && !qs.has("code") && !qs.has("mode")) qs.set("mode", "duel");
+  const query = qs.toString();
+  redirect(query ? `/jouer?${query}` : "/jouer?mode=duel");
 }

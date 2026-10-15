@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
 const NAV = [
-  { href: "/solo", label: "Solo", icon: "🎯" },
-  { href: "/multi", label: "Multi", icon: "⚔️" },
+  { href: "/jouer", label: "Jouer", icon: "🎯" },
   { href: "/boosters", label: "Boosters", icon: "🎁" },
   { href: "/collection", label: "Collection", icon: "🃏" },
   { href: "/amis", label: "Amis", icon: "👥" },
