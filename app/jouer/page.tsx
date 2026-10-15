@@ -59,12 +59,10 @@ function Setup({
         <div className="play-setup-choices">
           <div className="mode-grid">
             <button className="mode-card" onClick={() => choose("solo")}>
-              <span className="mode-emoji" aria-hidden>🎯</span>
               <strong>Solo</strong>
               <span>Une partie pour vous</span>
             </button>
             <button className="mode-card" onClick={() => choose("duel")}>
-              <span className="mode-emoji" aria-hidden>⚔️</span>
               <strong>Duel</strong>
               <span>1 contre 1 en temps réel, la même série pour les deux joueurs</span>
             </button>
@@ -87,12 +85,10 @@ function Setup({
           <div className="play-setup-choices">
             <div className="mode-grid">
               <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
-                <span className="mode-emoji" aria-hidden>🎯</span>
                 <strong>Classique</strong>
                 <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
               </button>
               <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
-                <span className="mode-emoji" aria-hidden>⏱️</span>
                 <strong>Chrono</strong>
                 <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
               </button>

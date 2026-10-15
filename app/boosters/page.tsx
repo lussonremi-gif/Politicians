@@ -62,7 +62,7 @@ function BoosterTile({
         ))}
       </ul>
       <button className="btn primary" disabled={points < b.price || busy} onClick={() => onOpen(b)}>
-        Ouvrir · {b.price.toLocaleString("fr-FR")} 🪙
+        Ouvrir · {b.price.toLocaleString("fr-FR")} pts
       </button>
     </article>
   );
@@ -111,7 +111,7 @@ function Boosters() {
       <div className="fit-head">
         <h1 className="headline">Boosters</h1>
         <p className="collection-count">
-          Vous avez <strong>{points.toLocaleString("fr-FR")} 🪙</strong> · plus le booster est rare, plus la citation est culte
+          Vous avez <strong>{points.toLocaleString("fr-FR")} pts</strong> · plus le booster est rare, plus la citation est culte
         </p>
       </div>
 

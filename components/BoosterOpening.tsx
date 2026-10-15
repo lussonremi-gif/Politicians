@@ -402,10 +402,12 @@ export function BoosterOpening({
                 <span className="wo-shockwave" aria-hidden />
                 <Particles rarity={current.rarity} seed={index + 1} />
                 <CollectibleCard card={current} />
-                <span className={`bo-banner ${current.rarity}`}>
-                  {RARITY_LABEL[current.rarity]}
-                  {current.new ? " · Nouvelle !" : ""}
-                </span>
+                <span className={`bo-banner ${current.rarity}`}>{RARITY_LABEL[current.rarity]}</span>
+                {typeof current.new === "boolean" && (
+                  <span className={`bo-own ${current.new ? "is-new" : "is-dupe"}`}>
+                    {current.new ? "Nouvelle carte" : "Déjà en collection"}
+                  </span>
+                )}
               </div>
             )}
           </div>

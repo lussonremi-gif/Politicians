@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const MODES = [
-  { href: "/jouer", icon: "🎯", title: "Jouer", text: "Solo ou duel : trouvez qui a parlé.", color: "blue" },
-  { href: "/boosters", icon: "🎁", title: "Boosters", text: "Ouvrez des packs, visez la légendaire.", color: "gold" },
-  { href: "/collection", icon: "🃏", title: "Collection", text: "Les phrases cultes, de commune à légendaire.", color: "ink" },
-  { href: "/amis", icon: "👥", title: "Amis", text: "Classement et défis entre potes.", color: "red" },
+  { href: "/jouer", title: "Jouer", text: "Solo ou duel : trouvez qui a parlé.", color: "blue" },
+  { href: "/boosters", title: "Boosters", text: "Ouvrez des packs, visez la légendaire.", color: "gold" },
+  { href: "/collection", title: "Collection", text: "Les phrases cultes, de commune à légendaire.", color: "ink" },
+  { href: "/amis", title: "Amis", text: "Classement et défis entre potes.", color: "red" },
 ];
 
 export default function Home() {
@@ -32,7 +32,6 @@ export default function Home() {
       <div className="mode-tiles">
         {MODES.map((m) => (
           <Link key={m.href} href={m.href} className={`mode-tile tile-${m.color}`}>
-            <span className="mode-icon" aria-hidden>{m.icon}</span>
             <strong>{m.title}</strong>
             <span>{m.text}</span>
           </Link>
