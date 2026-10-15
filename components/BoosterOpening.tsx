@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CollectibleCard } from "./CollectibleCard";
-import { Photo } from "./Photo";
 import { presentCard } from "@/lib/cardArt";
 import * as sfx from "@/lib/sfx";
 import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/types";
@@ -13,13 +12,14 @@ import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/t
  *   1. le booster flotte ; on le touche
  *   2. il se charge (tremblements, lumière qui fuit) plus ou moins longtemps selon sa meilleure carte
  *   3. il explose
- *   4. pour chaque carte, de la plus commune à la plus rare :
- *        scène (projecteurs, couleur de la rareté)
- *        → le parti tombe sur la scène
- *        → la photo se dévoile pendant que la citation s'écrit
- *        → la carte est projetée, onde de choc, éclats (feux d'artifice pour légendaire et mythique)
+ *   4. pour chaque carte, de la plus commune à la plus rare, un indice à la fois, seul à l'écran :
+ *        lumière qui monte (couleur de la rareté)
+ *        → le parti (écusson)
+ *        → le poste, s'il y en a un
+ *        → la carte d'un coup : photo + citation, onde de choc, éclats
+ *          (feux d'artifice pour légendaire et mythique)
  *   5. récapitulatif
- * Toucher l'écran accélère : la carte en cours se révèle directement.
+ * Toucher l'écran passe à l'indice suivant.
  */
 
 type Phase = "pack" | "charging" | "burst" | "reveal" | "summary";
@@ -27,13 +27,19 @@ type Phase = "pack" | "charging" | "burst" | "reveal" | "summary";
 // Durée de la charge du booster selon sa meilleure carte
 const CHARGE_MS: Record<Rarity, number> = { common: 1000, rare: 1800, epic: 2400, legendary: 3200, mythic: 4000 };
 
-// Durées des étapes d'une carte : [scène → parti, parti → citation, citation → carte]
-const STEP_MS: Record<Rarity, [number, number, number]> = {
-  common: [300, 700, 1300],
-  rare: [600, 1000, 1900],
-  epic: [800, 1200, 2300],
-  legendary: [1100, 1500, 2900],
-  mythic: [1400, 1800, 3400],
+// Étapes d'une carte
+const INTRO = 0;
+const PARTY = 1;
+const ROLE = 2;
+const CARD = 3;
+
+// Temps passé sur chaque indice : [lumière, parti, poste]
+const HOLD_MS: Record<Rarity, [number, number, number]> = {
+  common: [700, 1400, 1400],
+  rare: [900, 1700, 1700],
+  epic: [1000, 1900, 1900],
+  legendary: [1200, 2200, 2200],
+  mythic: [1400, 2600, 2600],
 };
 
 const HINT: Record<Rarity, string> = {
@@ -48,6 +54,13 @@ const big = (r: Rarity) => RARITY_RANK[r] >= RARITY_RANK.legendary;
 
 function bestRarity(cards: OpenedCard[]): Rarity {
   return cards.reduce<Rarity>((b, c) => (RARITY_RANK[c.rarity] > RARITY_RANK[b] ? c.rarity : b), "common");
+}
+
+/** « Premier ministre (1997-2002) » → titre « Premier ministre », période « 1997-2002 ». */
+function splitRole(role: string | null | undefined): { title: string; period: string | null } | null {
+  if (!role) return null;
+  const m = role.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  return m ? { title: m[1], period: m[2] } : { title: role, period: null };
 }
 
 /** Générateur pseudo-aléatoire stable (pour que les effets ne changent pas à chaque rendu). */
@@ -90,7 +103,7 @@ function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
   );
 }
 
-/** Feux d'artifice autour de la carte (légendaire et mythique). */
+/** Feux d'artifice plein écran (légendaire et mythique). */
 function Fireworks({ rarity, seed }: { rarity: Rarity; seed: number }) {
   const bursts = useMemo(() => {
     const rand = seeded(seed + 7);
@@ -115,33 +128,6 @@ function Fireworks({ rarity, seed }: { rarity: Rarity; seed: number }) {
   );
 }
 
-/** Citation qui s'écrit lettre par lettre. */
-function TypedQuote({ text, duration }: { text: string; duration: number }) {
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    setShown(0);
-    const total = text.length;
-    const every = Math.max(12, (duration * 0.75) / total);
-    let i = 0;
-    const t = setInterval(() => {
-      i += 1;
-      setShown(i);
-      if (i % 2 === 0) sfx.tick();
-      if (i >= total) clearInterval(t);
-    }, every);
-    return () => clearInterval(t);
-  }, [text, duration]);
-  return (
-    <p className="wo-quote-text">
-      « {text.slice(0, shown)}
-      <span className="wo-caret" aria-hidden>
-        |
-      </span>
-      {shown >= text.length ? " »" : ""}
-    </p>
-  );
-}
-
 export function BoosterOpening({
   cards,
   boosterName,
@@ -159,11 +145,13 @@ export function BoosterOpening({
   const best = bestRarity(prepared);
   const [phase, setPhase] = useState<Phase>("pack");
   const [index, setIndex] = useState(0);
-  const [step, setStep] = useState(0); // 0 scène, 1 parti, 2 citation, 3 carte
+  const [step, setStep] = useState(INTRO);
   const [muted, setMutedState] = useState(sfx.isMuted());
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const current = ordered[index];
+  const role = splitRole(current?.role);
+
   const later = useCallback((fn: () => void, ms: number) => {
     timers.current.push(setTimeout(fn, ms));
   }, []);
@@ -191,23 +179,33 @@ export function BoosterOpening({
       setPhase("burst");
       later(() => {
         setIndex(0);
-        setStep(0);
+        setStep(INTRO);
         setPhase("reveal");
       }, 650);
     }, CHARGE_MS[best]);
   }, [phase, best, later]);
 
-  // Enchaînement des étapes de la carte courante
+  /** Passe à l'indice suivant de la carte courante (le poste est sauté s'il n'y en a pas). */
+  const nextStep = useCallback(() => {
+    if (!current) return;
+    const next = step === PARTY && !role ? CARD : step + 1;
+    if (next === PARTY || next === ROLE) sfx.thud();
+    if (next === CARD) sfx.reveal(RARITY_RANK[current.rarity]);
+    setStep(next);
+  }, [current, step, role]);
+
+  // Enchaînement automatique des indices
   useEffect(() => {
-    if (phase !== "reveal" || !current || step >= 3) return;
-    const ms = STEP_MS[current.rarity][step];
-    const t = setTimeout(() => {
-      const next = step + 1;
-      if (next === 1) sfx.thud();
-      if (next === 3) sfx.reveal(RARITY_RANK[current.rarity]);
-      setStep(next);
-    }, ms);
+    if (phase !== "reveal" || !current || step >= CARD) return;
+    const t = setTimeout(nextStep, HOLD_MS[current.rarity][step]);
     return () => clearTimeout(t);
+  }, [phase, step, current, nextStep]);
+
+  // Petite montée sonore pendant que la lumière monte
+  useEffect(() => {
+    if (phase === "reveal" && current && step === INTRO) {
+      sfx.riser(HOLD_MS[current.rarity][INTRO] / 1000, RARITY_RANK[current.rarity]);
+    }
   }, [phase, step, current]);
 
   function advance() {
@@ -216,15 +214,13 @@ export function BoosterOpening({
       return;
     }
     if (phase !== "reveal" || !current) return;
-    if (step < 3) {
-      // Accélérer : révéler directement la carte
-      sfx.reveal(RARITY_RANK[current.rarity]);
-      setStep(3);
+    if (step < CARD) {
+      nextStep();
       return;
     }
     if (index + 1 < ordered.length) {
       setIndex(index + 1);
-      setStep(0);
+      setStep(INTRO);
     } else {
       setPhase("summary");
     }
@@ -251,21 +247,27 @@ export function BoosterOpening({
 
   const stage: Rarity | "none" =
     phase === "reveal" && current ? current.rarity : phase === "charging" || phase === "burst" ? best : "none";
-  const showRays = stage !== "none" && RARITY_RANK[stage] >= RARITY_RANK.rare && (phase !== "reveal" || step >= 1);
+  // Les rayons tournent dès la charge, et accélèrent quand la carte apparaît
+  const showRays = phase === "charging" || phase === "burst" || phase === "reveal";
+  const quake = phase === "reveal" && step === CARD && current && big(current.rarity);
 
   return (
     <div
-      className={`bo-overlay stage-${stage} phase-${phase} ${phase === "reveal" && step === 3 && current && big(current.rarity) ? "quake" : ""}`}
+      className={`bo-overlay stage-${stage} phase-${phase} ${phase === "reveal" ? `step-${step}` : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label={`Ouverture : ${boosterName}`}
       onClick={phase === "summary" ? undefined : advance}
     >
+      {/* Fond plein écran : couvre toujours tout le viewport, quelle que soit sa taille */}
+      <div className="bo-bg" aria-hidden>
+        {showRays && <div className="bo-bg-rays" />}
+        <div className="bo-bg-vignette" />
+      </div>
       <div className="bo-spotlights" aria-hidden>
         <span />
         <span />
       </div>
-      {showRays && <div className="bo-rays" aria-hidden />}
       <div className="bo-dust" aria-hidden />
 
       <div className="bo-controls">
@@ -303,42 +305,45 @@ export function BoosterOpening({
         </div>
       )}
 
-      {phase === "reveal" && current && step === 3 && big(current.rarity) && (
-        <Fireworks key={`fw-${index}`} rarity={current.rarity} seed={index + 1} />
-      )}
+      {/* Coupure lumineuse entre deux indices (à la racine : plein écran même pendant le tremblement) */}
+      {phase === "reveal" && step > INTRO && <div className="wo-cut" key={`cut-${index}-${step}`} aria-hidden />}
+
+      {quake && <Fireworks key={`fw-${index}`} rarity={current.rarity} seed={index + 1} />}
 
       {phase === "reveal" && current && (
-        <div className="bo-center wo" key={index}>
+        <div className={`bo-center wo ${quake ? "quake" : ""}`} key={index}>
           <p className="bo-counter">
             Carte {index + 1}/{ordered.length}
           </p>
 
-          {step < 3 && (
-            <div className={`wo-stage wo-${current.rarity}`}>
-              {step >= 1 && (
-                <div
-                  className={`wo-party ${step >= 2 ? "docked" : ""} ${current.party_color ? "" : "no-party"}`}
-                  style={{ ["--party" as string]: current.party_color ?? "#2f5bd3" }}
-                >
-                  <span className="wo-party-badge">{current.party_short ?? "★"}</span>
-                  <span className="wo-party-name">{current.party_name ?? current.role ?? "Personnalité politique"}</span>
+          {step < CARD && (
+            <div className={`wo-stage wo-${current.rarity}`} key={`step-${step}`}>
+              {step === INTRO && <div className="wo-glow" aria-hidden />}
+
+              {step === PARTY && (
+                <div className={`wo-clue wo-party ${current.party_color ? "" : "no-party"}`} style={{ ["--party" as string]: current.party_color ?? "#2f5bd3" }}>
+                  <span className="wo-label">Parti</span>
+                  <span className="wo-crest">
+                    <span className="wo-crest-text">{current.party_short ?? "SE"}</span>
+                  </span>
                   <span className="wo-ring" aria-hidden />
+                  <span className="wo-ring late" aria-hidden />
+                  <strong className="wo-party-name">{current.party_name ?? "Sans étiquette"}</strong>
                 </div>
               )}
-              {step >= 2 && (
-                <div className="wo-quote">
-                  <div className="wo-photo" style={{ ["--party" as string]: current.party_color ?? "#7a7d85" }}>
-                    <Photo src={current.image_url} fallbackSrc={current.fallback_image_url} focus={current.image_focus} name={current.name} />
-                  </div>
-                  {current.text && <TypedQuote text={current.text} duration={STEP_MS[current.rarity][2]} />}
-                  {current.said_on && <span className="wo-year">{current.said_on.slice(0, 4)}</span>}
+
+              {step === ROLE && role && (
+                <div className="wo-clue wo-role" style={{ ["--party" as string]: current.party_color ?? "#2f5bd3" }}>
+                  <span className="wo-label">Poste</span>
+                  <strong className="wo-role-title">{role.title}</strong>
+                  {role.period && <span className="wo-role-period">{role.period}</span>}
+                  <span className="wo-underline" aria-hidden />
                 </div>
               )}
-              {step === 0 && <div className={`wo-glow wo-glow-${current.rarity}`} aria-hidden />}
             </div>
           )}
 
-          {step === 3 && (
+          {step === CARD && (
             <div className={`bo-card enter-${current.rarity}`} onClick={(e) => e.stopPropagation()}>
               <span className="wo-shockwave" aria-hidden />
               <Particles rarity={current.rarity} seed={index + 1} />
@@ -351,7 +356,7 @@ export function BoosterOpening({
           )}
 
           <p className="bo-hint">
-            {step < 3 ? "Touchez pour révéler" : index + 1 < ordered.length ? "Touchez pour la carte suivante" : "Touchez pour voir le résumé"}
+            {step < CARD ? "Touchez pour continuer" : index + 1 < ordered.length ? "Touchez pour la carte suivante" : "Touchez pour voir le résumé"}
           </p>
         </div>
       )}

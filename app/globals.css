@@ -429,16 +429,6 @@ button { font-family: inherit; }
 .bo-flash.rare { background: #bcd3ff; }
 .bo-flash.legendary { background: #ffe9a8; }
 
-/* Rayons tournants */
-.bo-rays {
-  position: fixed; left: 50%; top: 50%; width: 220vmax; height: 220vmax; z-index: 1; pointer-events: none;
-  transform: translate(-50%, -50%);
-  background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.07) 0deg 8deg, transparent 8deg 22deg);
-  animation: spin 18s linear infinite; mask-image: radial-gradient(circle, #000 0%, transparent 55%);
-}
-.stage-rare .bo-rays { background: repeating-conic-gradient(from 0deg, rgba(120, 170, 255, 0.16) 0deg 8deg, transparent 8deg 22deg); }
-.stage-legendary .bo-rays { background: repeating-conic-gradient(from 0deg, rgba(255, 205, 90, 0.26) 0deg 9deg, transparent 9deg 20deg); animation-duration: 9s; }
-
 /* Entrée en scène d'une légendaire : parti → année → carte */
 .bo-walkout { display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 330px; justify-content: center; }
 .bo-walkout-party { font-size: 26px; font-weight: 600; padding: 6px 22px; border-radius: 999px; background: var(--party); box-shadow: 0 0 40px var(--party), 0 0 0 3px rgba(255, 255, 255, 0.6); animation: popIn 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
@@ -479,7 +469,6 @@ button { font-family: inherit; }
 @keyframes shakeHard { 0%, 100% { translate: 0 0; rotate: 0deg; } 25% { translate: -6px 3px; rotate: -2deg; } 75% { translate: 6px -3px; rotate: 2deg; } }
 @keyframes swell { from { scale: 1; } to { scale: 1.18; } }
 @keyframes flash { from { opacity: 0.95; } to { opacity: 0; } }
-@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 @keyframes popIn { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
 @keyframes slam { from { opacity: 0; transform: scale(2.6); } to { opacity: 1; transform: scale(1); } }
 @keyframes orb { 0% { transform: scale(0.2); opacity: 0.2; } 80% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
@@ -713,11 +702,6 @@ button { font-family: inherit; }
 .bo-overlay.stage-uncommon { background: radial-gradient(circle at 50% 45%, #1d4a33, #05110a 75%); }
 .bo-overlay.stage-epic { background: radial-gradient(circle at 50% 45%, #4a2380, #0c0418 75%); }
 .bo-overlay.stage-mythic { background: radial-gradient(circle at 50% 45%, #2a2f6e, #070512 72%); }
-.stage-epic .bo-rays { background: repeating-conic-gradient(from 0deg, rgba(190, 140, 255, 0.2) 0deg 8deg, transparent 8deg 21deg); animation-duration: 12s; }
-.stage-mythic .bo-rays {
-  background: repeating-conic-gradient(from 0deg, rgba(47, 85, 151, 0.35) 0deg 6deg, rgba(255, 255, 255, 0.28) 6deg 12deg, rgba(200, 49, 59, 0.35) 12deg 18deg, transparent 18deg 30deg);
-  animation-duration: 6s;
-}
 .bo-pack.charging-uncommon { animation: shakeSoft 0.1s linear infinite; box-shadow: 0 0 55px 6px rgba(80, 210, 130, 0.6); }
 .bo-pack.charging-epic { animation: shakeMid 0.08s linear infinite, swell 2s ease-in forwards; box-shadow: 0 0 90px 20px rgba(170, 100, 255, 0.8); }
 .bo-pack.charging-mythic { animation: shakeHard 0.06s linear infinite, swell 3.6s ease-in forwards, hue 1.2s linear infinite; box-shadow: 0 0 130px 40px rgba(255, 255, 255, 0.85); }
@@ -1042,7 +1026,7 @@ body { font-family: var(--display); background: var(--bg); }
 .bo-overlay.stage-epic { --spot: rgba(190, 130, 255, 0.32); }
 .bo-overlay.stage-legendary { --spot: rgba(255, 205, 90, 0.4); }
 .bo-overlay.stage-mythic { --spot: rgba(255, 255, 255, 0.42); }
-.bo-overlay.quake { animation: quake 0.6s 0.05s; }
+.wo.quake { animation: quake 0.6s 0.05s; }
 @keyframes quake { 0%, 100% { transform: none; } 15% { transform: translate(-12px, 8px); } 30% { transform: translate(10px, -9px); } 45% { transform: translate(-8px, 6px); } 60% { transform: translate(6px, -4px); } 80% { transform: translate(-3px, 2px); } }
 
 /* Projecteurs */
@@ -1088,40 +1072,6 @@ body { font-family: var(--display); background: var(--bg); }
 /* Scène d'une carte */
 .wo { gap: 10px; }
 .wo-stage { position: relative; width: min(760px, 92vw); min-height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.wo-glow { width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, #fff, var(--spot) 45%, transparent 70%); animation: glowPulse 0.9s ease-in-out infinite; }
-@keyframes glowPulse { 0%, 100% { transform: scale(0.8); opacity: 0.6; } 50% { transform: scale(1.25); opacity: 1; } }
-
-/* Le parti tombe sur la scène */
-.wo-party { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; animation: partyDrop 0.7s cubic-bezier(0.2, 1.5, 0.4, 1); transition: transform 0.6s cubic-bezier(0.3, 1.2, 0.4, 1); }
-.wo-party.docked { transform: translateY(-14px) scale(0.55); margin-bottom: -60px; }
-.wo-party-badge {
-  width: 160px; height: 160px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--party) 70%, #fff), var(--party) 60%, color-mix(in srgb, var(--party) 70%, #000));
-  border: 5px solid #fff; color: #fff; font-family: var(--display); font-weight: 800; font-size: 46px; letter-spacing: -0.02em;
-  box-shadow: 0 0 60px var(--party), 0 0 0 10px rgba(255, 255, 255, 0.12);
-}
-.wo-party-name { font-family: var(--display); font-size: 26px; font-weight: 800; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
-.wo-party.docked .wo-party-name { opacity: 0; }
-.wo-ring { position: absolute; top: 80px; left: 50%; width: 160px; height: 160px; margin: -80px 0 0 -80px; border-radius: 50%; border: 4px solid var(--party); animation: ring 0.9s ease-out forwards; pointer-events: none; }
-@keyframes partyDrop { 0% { transform: translateY(-70vh) scale(1.6); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
-@keyframes ring { from { transform: scale(0.8); opacity: 1; } to { transform: scale(3.2); opacity: 0; } }
-
-/* Photo + citation */
-.wo-quote { display: flex; flex-direction: column; align-items: center; gap: 16px; animation: fadeIn 0.4s; }
-.wo-photo {
-  width: 190px; height: 230px; border-radius: 22px; overflow: hidden; border: 4px solid var(--party);
-  box-shadow: 0 0 50px color-mix(in srgb, var(--party) 70%, transparent), 0 20px 40px rgba(0, 0, 0, 0.5);
-  animation: photoIn 2.2s ease-out forwards;
-}
-.wo-photo img, .wo-photo .portrait-fallback { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; display: flex; }
-@keyframes photoIn { 0% { filter: blur(22px) grayscale(1) brightness(0.2); transform: scale(0.85); } 60% { filter: blur(6px) grayscale(0.6) brightness(0.7); } 100% { filter: none; transform: none; } }
-.wo-quote-text { margin: 0; max-width: 700px; font-family: var(--font-serif), serif; font-style: italic; font-size: clamp(22px, 3.4vw, 34px); line-height: 1.25; text-align: center; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7); }
-.wo-caret { animation: blink 0.6s steps(1) infinite; font-style: normal; opacity: 0.8; }
-@keyframes blink { 50% { opacity: 0; } }
-.wo-year { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: 0.3em; opacity: 0.75; }
-.stage-legendary .wo-year { color: #ffd66b; }
-.stage-mythic .wo-year { color: #fff; text-shadow: 0 0 20px #5b8cff; }
-
 /* Carte projetée */
 .wo-shockwave { position: absolute; left: 50%; top: 45%; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%; border: 6px solid var(--spot); pointer-events: none; animation: shock 0.9s ease-out forwards; z-index: -1; }
 @keyframes shock { from { transform: scale(0.5); opacity: 1; } to { transform: scale(5); opacity: 0; border-width: 1px; } }
@@ -1158,8 +1108,6 @@ body { font-family: var(--display); background: var(--bg); }
   .mode-tile strong { font-size: 22px; }
   .mode-icon { font-size: 30px; }
   .wo-stage { min-height: 380px; }
-  .wo-party-badge { width: 120px; height: 120px; font-size: 34px; }
-  .wo-photo { width: 150px; height: 185px; }
   .points-pop { font-size: 48px; }
 }
 
@@ -1167,7 +1115,6 @@ body { font-family: var(--display); background: var(--bg); }
 .new-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 999px; background: var(--red); color: #fff; border: 1.5px solid #fff; }
 .copies-tag { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; border: 1.5px solid currentColor; }
 /* Personnalité sans parti : écusson tricolore */
-.wo-party.no-party .wo-party-badge { background: linear-gradient(90deg, #2f5bd3 0 33%, #ffffff 33% 66%, #e63946 66%); color: var(--ink); text-shadow: 0 0 8px #fff; box-shadow: 0 0 60px rgba(255, 255, 255, 0.6), 0 0 0 10px rgba(255, 255, 255, 0.12); }
 .account-brand { margin: 0 0 18px; }
 
 /* Jeu : la citation reste la star de l'écran, les portraits gardent leurs proportions */
@@ -1178,3 +1125,95 @@ body { font-family: var(--display); background: var(--bg); }
 .game .person-photo { flex: none; aspect-ratio: 4 / 5; height: auto; max-height: calc(100dvh - 400px); min-height: 120px; width: 100%; }
 .game:has(.reveal) .headline.quote { font-size: clamp(20px, 2.2vw, 28px); }
 .game:has(.reveal) .person-photo { aspect-ratio: auto; }
+
+/* =====================================================================
+   OUVERTURE : fond plein écran et walkout « parti → poste → carte »
+   ===================================================================== */
+.bo-overlay { --ray: rgba(255, 255, 255, 0.08); --ray-speed: 26s; }
+.bo-overlay.stage-common { --ray: rgba(255, 255, 255, 0.09); }
+.bo-overlay.stage-rare { --ray: rgba(120, 170, 255, 0.18); --ray-speed: 22s; }
+.bo-overlay.stage-epic { --ray: rgba(190, 140, 255, 0.22); --ray-speed: 18s; }
+.bo-overlay.stage-legendary { --ray: rgba(255, 205, 90, 0.26); --ray-speed: 14s; }
+.bo-overlay.stage-mythic { --ray: rgba(255, 255, 255, 0.22); --ray-speed: 11s; }
+.bo-overlay.step-3 { --ray-speed: 7s; }
+
+/* Calque fixe qui couvre tout le viewport ; les rayons sont un carré bien plus grand que
+   la diagonale de l'écran, centré par marges négatives (pas de translate qui se ferait
+   écraser par la rotation), donc aucun coin vide pendant qu'il tourne. */
+.bo-bg { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+.bo-bg-rays {
+  position: absolute; left: 50%; top: 50%; width: 300vmax; height: 300vmax; margin: -150vmax 0 0 -150vmax;
+  background: repeating-conic-gradient(from 0deg, var(--ray) 0deg 7deg, transparent 7deg 18deg);
+  animation: raySpin var(--ray-speed) linear infinite, fadeIn 0.6s ease-out;
+  transition: opacity 0.4s;
+}
+.stage-mythic .bo-bg-rays {
+  background: repeating-conic-gradient(from 0deg, rgba(47, 85, 151, 0.3) 0deg 6deg, rgba(255, 255, 255, 0.16) 6deg 12deg, rgba(200, 49, 59, 0.3) 12deg 18deg, transparent 18deg 30deg);
+}
+.bo-bg-vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 48%, transparent 25%, rgba(0, 0, 0, 0.55) 100%); }
+@keyframes raySpin { to { transform: rotate(360deg); } }
+.bo-spotlights, .bo-dust { z-index: 1; }
+.bo-center { z-index: 3; }
+.bo-controls { z-index: 7; }
+
+/* Scène d'un indice : chaque indice est seul, en grand, au centre */
+.wo-stage { position: relative; width: min(760px, 92vw); min-height: 440px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.wo-glow {
+  width: 140px; height: 140px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 12%, var(--spot) 40%, transparent 70%);
+  box-shadow: 0 0 120px 30px var(--spot); animation: orbRise 1.4s ease-in forwards;
+}
+@keyframes orbRise { 0% { transform: translateY(40vh) scale(0.2); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(0) scale(1.15); } }
+
+/* Coupure lumineuse entre deux indices */
+.wo-cut { position: fixed; inset: 0; z-index: 4; pointer-events: none; background: radial-gradient(circle at 50% 45%, #fff, var(--spot) 60%, transparent); animation: cut 0.5s ease-out forwards; }
+@keyframes cut { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+
+.wo-clue { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.wo-label {
+  font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: 0.5em; text-transform: uppercase; padding-left: 0.5em;
+  opacity: 0; animation: labelIn 0.5s 0.15s ease-out forwards;
+}
+@keyframes labelIn { from { opacity: 0; letter-spacing: 1.2em; } to { opacity: 0.8; letter-spacing: 0.5em; } }
+
+/* Le parti : écusson qui tombe et s'écrase */
+.wo-crest {
+  width: 230px; height: 230px; display: flex; align-items: center; justify-content: center; position: relative;
+  clip-path: polygon(50% 0, 100% 14%, 100% 58%, 50% 100%, 0 58%, 0 14%);
+  background: radial-gradient(circle at 35% 25%, color-mix(in srgb, var(--party) 55%, #fff), var(--party) 55%, color-mix(in srgb, var(--party) 60%, #000));
+  animation: crestSlam 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  filter: drop-shadow(0 0 40px var(--party));
+}
+.wo-crest::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%); background-size: 300% 100%; animation: shine 2.2s 0.6s ease-in-out infinite; }
+.wo-crest-text { font-family: var(--display); font-weight: 800; font-size: 58px; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 0 20px rgba(0, 0, 0, 0.3); max-width: 190px; overflow-wrap: anywhere; line-height: 1; margin-top: -14px; }
+.wo-party.no-party .wo-crest { background: linear-gradient(90deg, #2f5bd3 0 33%, #ffffff 33% 66%, #e63946 66%); filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.7)); }
+.wo-party.no-party .wo-crest-text { color: var(--ink); text-shadow: 0 0 10px #fff; }
+.wo-party-name { font-family: var(--display); font-size: clamp(24px, 4vw, 36px); font-weight: 800; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7); max-width: 92vw; opacity: 0; animation: riseIn 0.6s 0.45s ease-out forwards; }
+.wo-ring { position: absolute; top: calc(50% - 8px); left: 50%; width: 230px; height: 230px; margin: -115px 0 0 -115px; border-radius: 50%; border: 5px solid var(--party); animation: ring 1s 0.35s ease-out both; pointer-events: none; }
+.wo-ring.late { animation-delay: 0.6s; }
+@keyframes crestSlam { 0% { transform: translateY(-60vh) scale(2.2) rotate(-10deg); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; } }
+@keyframes ring { from { transform: scale(0.8); opacity: 1; } to { transform: scale(3.4); opacity: 0; } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+/* Le poste : titre qui claque, période en dessous */
+.wo-role-title {
+  font-family: var(--display); font-weight: 800; text-transform: uppercase; line-height: 1.02; letter-spacing: -0.01em;
+  font-size: clamp(38px, 7.5vw, 84px); max-width: 92vw; text-wrap: balance;
+  color: #fff; text-shadow: 0 0 30px var(--spot), 0 4px 0 rgba(0, 0, 0, 0.35);
+  animation: slam 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.stage-legendary .wo-role-title { color: #ffe08a; text-shadow: 0 0 40px rgba(255, 200, 70, 0.9), 0 4px 0 rgba(0, 0, 0, 0.35); }
+.stage-mythic .wo-role-title { text-shadow: 0 0 30px #5b8cff, 0 0 60px #c8313b, 0 4px 0 rgba(0, 0, 0, 0.35); }
+.wo-role-period { font-family: var(--display); font-weight: 800; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: 0.25em; opacity: 0; animation: riseIn 0.5s 0.45s ease-out forwards; }
+.wo-underline { width: 0; height: 6px; border-radius: 3px; background: var(--party); box-shadow: 0 0 24px var(--party); animation: underline 0.6s 0.3s ease-out forwards; }
+@keyframes underline { to { width: min(420px, 70vw); } }
+
+@media (max-width: 720px) {
+  .wo-stage { min-height: 380px; }
+  .wo-crest { width: 180px; height: 180px; }
+  .wo-crest-text { font-size: 44px; max-width: 150px; }
+  .wo-ring { width: 180px; height: 180px; margin: -90px 0 0 -90px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bo-bg-rays { animation: none; }
+}
