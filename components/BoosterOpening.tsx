@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CollectibleCard } from "./CollectibleCard";
 import { Photo } from "./Photo";
+import { presentCard } from "@/lib/cardArt";
 import * as sfx from "@/lib/sfx";
 import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/types";
 
@@ -24,12 +25,11 @@ import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/t
 type Phase = "pack" | "charging" | "burst" | "reveal" | "summary";
 
 // Durée de la charge du booster selon sa meilleure carte
-const CHARGE_MS: Record<Rarity, number> = { common: 1000, uncommon: 1300, rare: 1800, epic: 2400, legendary: 3200, mythic: 4000 };
+const CHARGE_MS: Record<Rarity, number> = { common: 1000, rare: 1800, epic: 2400, legendary: 3200, mythic: 4000 };
 
 // Durées des étapes d'une carte : [scène → parti, parti → citation, citation → carte]
 const STEP_MS: Record<Rarity, [number, number, number]> = {
   common: [300, 700, 1300],
-  uncommon: [400, 800, 1500],
   rare: [600, 1000, 1900],
   epic: [800, 1200, 2300],
   legendary: [1100, 1500, 2900],
@@ -38,7 +38,6 @@ const STEP_MS: Record<Rarity, [number, number, number]> = {
 
 const HINT: Record<Rarity, string> = {
   common: "Ouverture…",
-  uncommon: "Ouverture…",
   rare: "Ça brille…",
   epic: "Ça brille très fort…",
   legendary: "Quelque chose de spécial se prépare…",
@@ -62,14 +61,14 @@ function seeded(seed: number) {
 
 function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
   const rank = RARITY_RANK[rarity];
-  const count = [0, 0, 22, 32, 50, 80][rank];
+  const count = [0, 22, 32, 50, 80][rank];
   const parts = useMemo(() => {
     const rand = seeded(seed);
     return Array.from({ length: count }, (_, i) => ({
       angle: (360 / count) * i + rand() * 15,
-      distance: 160 + rand() * (rank >= 4 ? 320 : 170),
+      distance: 160 + rand() * (rank >= 3 ? 320 : 170),
       delay: rand() * 0.3,
-      size: 4 + rand() * (rank >= 4 ? 10 : 6),
+      size: 4 + rand() * (rank >= 3 ? 10 : 6),
     }));
   }, [count, rank, seed]);
   if (!count) return null;
@@ -154,8 +153,10 @@ export function BoosterOpening({
   accent: string;
   onClose: () => void;
 }) {
-  const ordered = useMemo(() => [...cards].sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]), [cards]);
-  const best = bestRarity(cards);
+  // presentCard : photo propre à la carte et rareté normalisée (voir lib/cardArt)
+  const prepared = useMemo(() => cards.map(presentCard), [cards]);
+  const ordered = useMemo(() => [...prepared].sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity]), [prepared]);
+  const best = bestRarity(prepared);
   const [phase, setPhase] = useState<Phase>("pack");
   const [index, setIndex] = useState(0);
   const [step, setStep] = useState(0); // 0 scène, 1 parti, 2 citation, 3 carte

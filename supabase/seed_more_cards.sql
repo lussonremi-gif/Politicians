@@ -59,9 +59,9 @@ from (values
   ('emmanuel-macron', 'Une gare, c''est un lieu où on croise les gens qui réussissent et les gens qui ne sont rien.', '2017-06-29', 'Inauguration de Station F, à Paris', 'petites phrases', 'rare', null),
   ('charles-de-gaulle', 'La réforme oui, la chienlit non.', '1968-05-19', 'Propos tenus pendant Mai 68, rapportés par le gouvernement', 'petites phrases', 'rare', null),
   ('philippe-poutou', 'Nous, quand on est convoqué par la police, on n''a pas d''immunité ouvrière.', '2017-04-04', 'Débat télévisé entre les onze candidats à la présidentielle', 'débats', 'rare', 'marine-le-pen'),
-  ('emmanuel-macron', 'Make our planet great again.', '2017-06-01', 'Allocution après l''annonce du retrait américain de l''accord de Paris sur le climat', 'discours', 'uncommon', 'donald-trump'),
-  ('emmanuel-macron', 'Qu''ils viennent me chercher.', '2018-07-24', 'Réunion des députés de la majorité pendant l''affaire Benalla', 'petites phrases', 'uncommon', null),
-  ('nicolas-sarkozy', 'Vous êtes un petit calomniateur.', '2012-05-02', 'Débat télévisé d''entre-deux-tours face à François Hollande', 'débats', 'uncommon', 'francois-hollande'),
+  ('emmanuel-macron', 'Make our planet great again.', '2017-06-01', 'Allocution après l''annonce du retrait américain de l''accord de Paris sur le climat', 'discours', 'common', 'donald-trump'),
+  ('emmanuel-macron', 'Qu''ils viennent me chercher.', '2018-07-24', 'Réunion des députés de la majorité pendant l''affaire Benalla', 'petites phrases', 'common', null),
+  ('nicolas-sarkozy', 'Vous êtes un petit calomniateur.', '2012-05-02', 'Débat télévisé d''entre-deux-tours face à François Hollande', 'débats', 'common', 'francois-hollande'),
   ('manuel-valls', 'Moi, j''aime l''entreprise !', '2014-08-27', 'Université d''été du Medef', 'petites phrases', 'common', 'emmanuel-macron')
 ) as v(who, text, said_on, occasion, theme, rarity, decoy);
 
@@ -89,8 +89,6 @@ from (values
   ('Vous êtes un petit calomniateur.', 'Nicolas Sarkozy in 2010.jpg', 'Wikimedia Commons', null),
   ('Moi, président de la République, je ne serai pas le chef de la majorité.', 'François Hollande 2012.JPG', 'Wikimedia Commons', null),
   ('La France est en guerre.', 'Francois Hollande 2015.jpeg', 'Wikimedia Commons', null),
-  ('Nous sommes en guerre.', 'Emmanuel Macron June 2022 (cropped).jpg', 'Présidence de l''Ukraine', 'CC BY 4.0'),
-  ('Les non-vaccinés, j''ai très envie de les emmerder.', 'Emmanuel Macron June 2022 (cropped).jpg', 'Présidence de l''Ukraine', 'CC BY 4.0'),
   ('La France sera dirigée par une femme, ce sera soit moi, soit Mme Merkel.', 'Marine Le Pen (2017-03-24) 01 cropped.jpg', 'Kremlin.ru', 'CC BY 4.0'),
   ('La République, c''est moi !', 'Jean-Luc Mélenchon 2017.jpg', 'Wikimedia Commons', null),
   ('Ma personne est sacrée !', 'Jean-Luc Mélenchon 2017.jpg', 'Wikimedia Commons', null),
@@ -104,6 +102,6 @@ where c.text = v.text;
 -- Booster du NPA s'il a des cartes
 insert into public.booster_types (slug, name, description, price, card_count, kind, party_id, weights, sort_order)
 select 'parti-npa', 'Booster NPA', '3 cartes · Nouveau Parti anticapitaliste', 400, 3, 'politicians', id,
-       '{"common":45,"uncommon":27,"rare":15,"epic":8,"legendary":4,"mythic":1}', 10
+       '{"common":72,"rare":15,"epic":8,"legendary":4,"mythic":1}', 10
 from public.parties where slug = 'npa'
 on conflict (slug) do nothing;

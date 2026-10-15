@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Crimson_Pro } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Header } from "@/components/Header";
+import { RequireAccount } from "@/components/RequireAccount";
 import "./globals.css";
 
 // Serif pour les citations, display arrondie et expressive pour l'interface
@@ -27,12 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="blob blob-red" />
             <span className="blob blob-gold" />
           </div>
-          <Header />
-          <main className="page">{children}</main>
-          <footer className="site-footer">
-            <span className="tricolor small" aria-hidden />
-            <p>Citations réelles et datées · photos sous licence libre (Wikimedia Commons)</p>
-          </footer>
+          <RequireAccount>
+            <Header />
+            <main className="page">{children}</main>
+            <footer className="site-footer">
+              <span className="tricolor small" aria-hidden />
+              <p>Citations réelles et datées · photos sous licence libre (Wikimedia Commons)</p>
+            </footer>
+          </RequireAccount>
         </AuthProvider>
       </body>
     </html>

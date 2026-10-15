@@ -32,7 +32,12 @@ export function Header() {
           </Link>
         ))}
         {profile && (
-          <Link href="/boosters" className="points-badge" title="Vos points">
+          <Link
+            href="/boosters"
+            className="points-badge"
+            title={profile.username ? `Compte ${profile.username}` : "Compte de cet appareil"}
+          >
+            {profile.username && <span className="points-user">{profile.username}</span>}
             <span aria-hidden>🪙</span> {profile.points.toLocaleString("fr-FR")}
           </Link>
         )}

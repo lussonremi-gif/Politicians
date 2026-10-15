@@ -3,7 +3,7 @@
 --
 -- Citations célèbres de la vie politique française, retenues parce qu'elles sont
 -- largement documentées (archives audiovisuelles, presse). Rareté selon le
--- retentissement : commune < peu commune < rare < épique < légendaire < mythique.
+-- retentissement : commune < rare < épique < légendaire < mythique.
 --
 -- À FAIRE PAR L'ÉQUIPE ÉDITORIALE AVANT LE LANCEMENT :
 --   - vérifier mot pour mot chaque citation et sa date sur la source d'origine
@@ -93,13 +93,13 @@ from (values
   ('lionel-jospin', 'J''assume pleinement la responsabilité de cet échec et j''en tire les conclusions, en me retirant de la vie politique après la fin de l''élection présidentielle.', '2002-04-21', 'Déclaration au soir du premier tour de la présidentielle', 'campagnes', 'rare', null),
   ('emmanuel-macron', 'On met un pognon de dingue dans des minima sociaux, et les gens ne s''en sortent pas.', '2018-06-12', 'Vidéo diffusée par la communication de l''Élysée', 'petites phrases', 'rare', null),
   ('emmanuel-macron', 'Les non-vaccinés, j''ai très envie de les emmerder.', '2022-01-04', 'Entretien au journal Le Parisien', 'petites phrases', 'rare', null),
-  -- Peu communes
-  ('edouard-balladur', 'Je vous demande de vous arrêter.', '1995-04-23', 'Soirée du premier tour de la présidentielle, face à ses partisans', 'campagnes', 'uncommon', 'jacques-chirac'),
-  ('segolene-royal', 'Qui va sur la Grande Muraille conquiert la bravitude.', '2007-01-06', 'Visite de la Grande Muraille de Chine pendant la campagne présidentielle', 'campagnes', 'uncommon', null),
-  ('emmanuel-macron', 'Je traverse la rue, je vous en trouve.', '2018-09-15', 'Journées du patrimoine à l''Élysée, face à un jeune demandeur d''emploi', 'petites phrases', 'uncommon', null),
-  ('jean-luc-melenchon', 'Ma personne est sacrée !', '2018-10-16', 'Perquisition au siège de La France insoumise', 'petites phrases', 'uncommon', null),
-  ('michel-rocard', 'La France ne peut pas accueillir toute la misère du monde.', '1989-12-03', 'Émission « Sept sur sept » ; la portée exacte de la phrase fait débat', 'petites phrases', 'uncommon', null),
-  ('marine-le-pen', 'La France sera dirigée par une femme, ce sera soit moi, soit Mme Merkel.', '2017-05-03', 'Débat télévisé d''entre-deux-tours face à Emmanuel Macron', 'débats', 'uncommon', 'emmanuel-macron'),
+  -- Communes (ancien palier « peu commune », replié ici)
+  ('edouard-balladur', 'Je vous demande de vous arrêter.', '1995-04-23', 'Soirée du premier tour de la présidentielle, face à ses partisans', 'campagnes', 'common', 'jacques-chirac'),
+  ('segolene-royal', 'Qui va sur la Grande Muraille conquiert la bravitude.', '2007-01-06', 'Visite de la Grande Muraille de Chine pendant la campagne présidentielle', 'campagnes', 'common', null),
+  ('emmanuel-macron', 'Je traverse la rue, je vous en trouve.', '2018-09-15', 'Journées du patrimoine à l''Élysée, face à un jeune demandeur d''emploi', 'petites phrases', 'common', null),
+  ('jean-luc-melenchon', 'Ma personne est sacrée !', '2018-10-16', 'Perquisition au siège de La France insoumise', 'petites phrases', 'common', null),
+  ('michel-rocard', 'La France ne peut pas accueillir toute la misère du monde.', '1989-12-03', 'Émission « Sept sur sept » ; la portée exacte de la phrase fait débat', 'petites phrases', 'common', null),
+  ('marine-le-pen', 'La France sera dirigée par une femme, ce sera soit moi, soit Mme Merkel.', '2017-05-03', 'Débat télévisé d''entre-deux-tours face à Emmanuel Macron', 'débats', 'common', 'emmanuel-macron'),
   -- Communes
   ('valery-giscard-destaing', 'Au revoir.', '1981-05-19', 'Allocution télévisée de fin de septennat', 'discours', 'common', 'francois-mitterrand'),
   ('nicolas-sarkozy', 'Désormais, quand il y a une grève en France, personne ne s''en aperçoit.', '2008-07-05', 'Conseil national de l''UMP', 'petites phrases', 'common', null),
@@ -108,13 +108,13 @@ from (values
   ('emmanuel-macron', 'Je ne céderai rien, ni aux fainéants, ni aux cyniques, ni aux extrêmes.', '2017-09-08', 'Discours à Athènes', 'discours', 'common', null)
 ) as v(who, text, said_on, occasion, theme, rarity, decoy);
 
--- Boosters : 6 raretés
+-- Boosters : 5 raretés (la part « peu commune » est reversée aux communes)
 update public.booster_types
-   set weights = '{"common":45,"uncommon":27,"rare":15,"epic":8,"legendary":4,"mythic":1}',
+   set weights = '{"common":72,"rare":15,"epic":8,"legendary":4,"mythic":1}',
        description = '3 cartes personnalité + citation'
  where kind = 'politicians' and slug <> 'premium';
 update public.booster_types
-   set weights = '{"common":20,"uncommon":25,"rare":25,"epic":17,"legendary":10,"mythic":3}',
+   set weights = '{"common":45,"rare":25,"epic":17,"legendary":10,"mythic":3}',
        description = '5 cartes, bien plus de chances de cartes rares'
  where slug = 'premium';
 
@@ -125,17 +125,33 @@ update public.booster_types b set active = exists (
  where b.party_id is not null;
 insert into public.booster_types (slug, name, description, price, card_count, kind, party_id, weights, sort_order)
 select 'parti-ps', 'Booster PS', '3 cartes · Parti socialiste', 400, 3, 'politicians', id,
-       '{"common":45,"uncommon":27,"rare":15,"epic":8,"legendary":4,"mythic":1}', 13
+       '{"common":72,"rare":15,"epic":8,"legendary":4,"mythic":1}', 13
 from public.parties where slug = 'ps'
 on conflict (slug) do nothing;
 
 -- Boosters thématiques
 insert into public.booster_types (slug, name, description, price, card_count, kind, tag, theme, weights, sort_order) values
   ('presidents', 'Booster Présidents', '3 cartes de présidents de la Ve République', 500, 3, 'politicians', 'president', null,
-   '{"common":40,"uncommon":27,"rare":17,"epic":9,"legendary":5,"mythic":2}', 3),
+   '{"common":67,"rare":17,"epic":9,"legendary":5,"mythic":2}', 3),
   ('debats', 'Booster Débats', '3 cartes tirées des débats d''entre-deux-tours', 500, 3, 'politicians', null, 'débats',
-   '{"common":40,"uncommon":27,"rare":17,"epic":9,"legendary":5,"mythic":2}', 4)
+   '{"common":67,"rare":17,"epic":9,"legendary":5,"mythic":2}', 4)
 on conflict (slug) do nothing;
 
 -- Les anciens boosters de citations fictives ne sont plus proposés
 update public.booster_types set active = false where kind = 'quotes';
+
+-- Une photo par carte Macron (Wikimedia Commons, licence libre)
+update public.cards c set
+  image_url = 'https://commons.wikimedia.org/wiki/Special:FilePath/' || replace(v.file, ' ', '_') || '?width=640',
+  image_credit = v.credit,
+  image_license = v.license,
+  image_source_url = 'https://commons.wikimedia.org/wiki/File:' || replace(v.file, ' ', '_')
+from (values
+  ('Parce que c''est notre projet !', 'Emmanuel Macron (11 décembre 2014) (2) (cropped).jpg', 'OFFICIAL LEWEB PHOTOS', 'CC BY 2.0'),
+  ('Nous sommes en guerre.', 'Emmanuel Macron 2020.jpg', 'U.S. Department of State', 'Domaine public'),
+  ('On met un pognon de dingue dans des minima sociaux, et les gens ne s''en sortent pas.', 'Emmanuel Macron in Washington - 2018 (26809923797) (cropped).jpg', 'U.S. Department of State', 'Domaine public'),
+  ('Les non-vaccinés, j''ai très envie de les emmerder.', 'Emmanuel Macron (2022-02-07) (cropped).jpg', 'Presidential Executive Office of Russia', 'CC BY 4.0'),
+  ('Je traverse la rue, je vous en trouve.', 'Emmanuel Macron in November 2018 (cropped).jpg', 'The Kremlin, Moscow', 'CC BY 4.0'),
+  ('Je ne céderai rien, ni aux fainéants, ni aux cyniques, ni aux extrêmes.', 'Emmanuel Macron (32605283887) (cropped).jpg', 'Jacques Paquier', 'CC BY 2.0')
+) as v(text, file, credit, license)
+where c.text = v.text;

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { ensureSession, getSupabase, isSupabaseConfigured, rememberSession } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
 
 type AuthState = {
@@ -21,8 +21,8 @@ const AuthContext = createContext<AuthState>({
 });
 
 /**
- * Partie invitée : chaque visiteur reçoit automatiquement un compte anonyme Supabase,
- * qui conserve ses points et sa collection sur cet appareil.
+ * Compte lié à cet appareil. La session est relue au chargement : un rafraîchissement
+ * ne crée un nouveau joueur que s'il n'existe encore aucune session.
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -43,20 +43,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setReady(true);
       return;
     }
-    (async () => {
-      const supabase = getSupabase();
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        const { error: signInError } = await supabase.auth.signInAnonymously();
-        if (signInError) {
-          setError("Impossible de créer une partie invitée : " + signInError.message);
-          setReady(true);
-          return;
-        }
+    let cancelled = false;
+    const supabase = getSupabase();
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
+        rememberSession(session);
       }
-      await refreshProfile();
-      setReady(true);
+    });
+    (async () => {
+      try {
+        await ensureSession();
+        if (!cancelled) await refreshProfile();
+      } catch (err) {
+        if (!cancelled) {
+          const detail = err instanceof Error ? err.message : "réessayez dans un instant";
+          setError("Impossible d'ouvrir le compte sur cet appareil : " + detail);
+        }
+      } finally {
+        if (!cancelled) setReady(true);
+      }
     })();
+    return () => {
+      cancelled = true;
+      subscription.subscription.unsubscribe();
+    };
   }, [refreshProfile]);
 
   const setPoints = useCallback((points: number) => {

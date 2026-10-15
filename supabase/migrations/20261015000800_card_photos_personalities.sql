@@ -11,12 +11,13 @@ alter table public.politicians
   add column kind text not null default 'politician' check (kind in ('politician', 'personality')),
   add column image_focus text;
 
+-- (les colonnes photo peuvent déjà exister : migration 20261015000800_card_photos)
 alter table public.cards
-  add column image_url text,
-  add column image_credit text,
-  add column image_license text,
-  add column image_source_url text,
-  add column image_focus text;
+  add column if not exists image_url text,
+  add column if not exists image_credit text,
+  add column if not exists image_license text,
+  add column if not exists image_source_url text,
+  add column if not exists image_focus text;
 
 create or replace function public._card_json(p_card uuid)
 returns jsonb language sql stable security definer set search_path = public as $$

@@ -10,7 +10,7 @@ import { Confetti } from "@/components/Confetti";
 import { QuoteDuel } from "@/components/QuoteDuel";
 import * as sfx from "@/lib/sfx";
 import { errorMessage, getSupabase } from "@/lib/supabase";
-import { formatDate, type AnswerResult, type GameMode, type Question, type Theme } from "@/lib/types";
+import { formatDate, type AnswerResult, type GameMode, type Question } from "@/lib/types";
 
 const QUESTIONS_PER_GAME = 10;
 const CHRONO_SECONDS = 60;
@@ -19,14 +19,7 @@ type Config = { mode: GameMode; theme: string | null };
 
 function Setup({ initial, onStart, busy }: { initial: Config; onStart: (c: Config) => void; busy: boolean }) {
   const [mode, setMode] = useState<GameMode>(initial.mode);
-  const [theme, setTheme] = useState<string | null>(initial.theme);
-  const [themes, setThemes] = useState<Theme[]>([]);
-
-  useEffect(() => {
-    getSupabase()
-      .rpc("list_themes")
-      .then(({ data }) => setThemes((data as Theme[]) ?? []));
-  }, []);
+  const theme = initial.theme;
 
   return (
     <section className="hero">
@@ -44,22 +37,6 @@ function Setup({ initial, onStart, busy }: { initial: Config; onStart: (c: Confi
           <strong>Chrono</strong>
           <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
         </button>
-      </div>
-
-      <h2 className="sub">Thème</h2>
-      <div className="chips">
-        <button className={theme === null ? "chip active" : "chip"} onClick={() => setTheme(null)}>
-          Tous les thèmes
-        </button>
-        {themes.map((t) => (
-          <button
-            key={t.theme}
-            className={theme === t.theme ? "chip active capitalize" : "chip capitalize"}
-            onClick={() => setTheme(t.theme)}
-          >
-            {t.theme} <small>{t.quote_count}</small>
-          </button>
-        ))}
       </div>
 
       <div className="actions">
@@ -200,7 +177,6 @@ function Game() {
         <span>{chrono ? `Chrono · question ${question.position}` : `Question ${question.position}/${question.total}`}</span>
         <span>{(result ? question.score + result.points : question.score).toLocaleString("fr-FR")} pts</span>
         <span className={streak >= 3 ? "streak hot" : "streak"}>{streak >= 3 ? "🔥" : "⚡"} Série : {streak}</span>
-        {config.theme && <span className="capitalize">Thème : {config.theme}</span>}
       </div>
       {chrono && question.ends_at && (
         <Countdown until={question.ends_at} totalSeconds={CHRONO_SECONDS} onEnd={() => loadNext(session)} />
