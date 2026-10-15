@@ -77,6 +77,7 @@ function pageUrl(file: string) {
 
 export function asRarity(value: string): Rarity {
   if (value === "uncommon") return "common";
+  if (value === "mythic") return "legendary";
   if ((RARITIES as string[]).includes(value)) return value as Rarity;
   return "common";
 }
@@ -91,7 +92,7 @@ function artFor(card: GameCard) {
   return MACRON_ART.find((a) => a.rarity === raw && a.theme === card.theme) ?? null;
 }
 
-/** Photo propre à la carte, et rareté sans le niveau « peu commune ». */
+/** Photo propre à la carte, et rareté ramenée aux quatre niveaux (plus de « peu commune » ni de « mythique »). */
 export function presentCard<T extends GameCard>(card: T): T {
   const art = artFor(card);
   const rarity = asRarity(card.rarity as string);

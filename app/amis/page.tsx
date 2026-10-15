@@ -24,6 +24,8 @@ function Friends() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
   const [savingAccount, setSavingAccount] = useState(false);
+  // Sur petit écran, un seul bloc à la fois (pas de défilement)
+  const [tab, setTab] = useState<"compte" | "amis" | "classement">("classement");
   const invited = useRef<string | null>(null);
 
   const loadBoard = useCallback(async () => {
@@ -116,18 +118,31 @@ function Friends() {
   const friends = (board ?? []).filter((row) => !row.is_me);
 
   return (
-    <section>
-      <div className="section-head">
+    <section className={`friends fit friends-${tab}`}>
+      <div className="fit-head">
         <h1 className="headline">Amis</h1>
-        <span className="tricolor" aria-hidden />
-        <p className="lead">Ajoutez vos amis avec leur code ou leur lien, et comparez vos scores.</p>
-        <p className="account-status">Connecté en tant que {profile.username}. Ce compte reste sur cet appareil.</p>
+        <p className="collection-count">
+          Connecté en tant que <strong>{profile.username}</strong> · ajoutez vos amis et comparez vos scores
+        </p>
+        <div className="rarity-tabs friends-tabs" role="tablist">
+          {(
+            [
+              ["classement", "Classement"],
+              ["amis", "Mes amis"],
+              ["compte", "Mon compte"],
+            ] as const
+          ).map(([key, label]) => (
+            <button key={key} role="tab" aria-selected={tab === key} className={`rarity-tab ${tab === key ? "active" : ""}`} onClick={() => setTab(key)}>
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {message && <p className={`notice center ${message.kind === "error" ? "error" : "success"}`}>{message.text}</p>}
 
       <div className="panel-grid">
-        <form className="panel" onSubmit={saveUsername}>
+        <form className="panel pane-compte" onSubmit={saveUsername}>
           <h2>Mon pseudo</h2>
           <p className="muted">C&apos;est le nom que voient vos amis et vos adversaires.</p>
           <div className="inline-form">
@@ -143,7 +158,7 @@ function Friends() {
           </div>
         </form>
 
-        <div className="panel">
+        <div className="panel pane-compte">
           <h2>Mon code ami</h2>
           <p className="muted">À donner à vos amis, ou envoyez-leur le lien : ils sont ajoutés en l&apos;ouvrant.</p>
           <div className="inline-form">
@@ -153,7 +168,7 @@ function Friends() {
           </div>
         </div>
 
-        <form className="panel" onSubmit={addFriend}>
+        <form className="panel pane-amis" onSubmit={addFriend}>
           <h2>Ajouter un ami</h2>
           <p className="muted">Collez un code ami ou un lien d&apos;invitation. Vous pouvez en ajouter plusieurs à la suite.</p>
           <div className="inline-form">
@@ -172,7 +187,7 @@ function Friends() {
       </div>
 
       <div className="split-panels">
-      <div className="panel">
+      <div className="panel pane-amis">
         <h2>Mes amis</h2>
         {!board ? (
           <p className="muted">Chargement…</p>
@@ -192,12 +207,13 @@ function Friends() {
         )}
       </div>
 
-      <div className="panel">
+      <div className="panel pane-classement">
         <h2>Classement entre amis</h2>
         {!board ? (
           <p className="muted">Chargement…</p>
         ) : (
           <>
+            <div className="leaderboard-wrap">
             <table className="leaderboard">
               <thead>
                 <tr>
@@ -230,6 +246,7 @@ function Friends() {
                 ))}
               </tbody>
             </table>
+            </div>
             {friends.length === 0 && <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>}
           </>
         )}

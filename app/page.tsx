@@ -2,8 +2,8 @@ import Link from "next/link";
 
 const MODES = [
   { href: "/jouer", icon: "🎯", title: "Jouer", text: "Solo ou duel : trouvez qui a parlé.", color: "blue" },
-  { href: "/boosters", icon: "🎁", title: "Boosters", text: "Ouvrez des packs et visez la carte mythique.", color: "gold" },
-  { href: "/collection", icon: "🃏", title: "Collection", text: "Toutes les phrases cultes, de commune à mythique.", color: "ink" },
+  { href: "/boosters", icon: "🎁", title: "Boosters", text: "Ouvrez des packs, visez la légendaire.", color: "gold" },
+  { href: "/collection", icon: "🃏", title: "Collection", text: "Les phrases cultes, de commune à légendaire.", color: "ink" },
   { href: "/amis", icon: "👥", title: "Amis", text: "Classement et défis entre potes.", color: "red" },
 ];
 
@@ -20,8 +20,7 @@ export default function Home() {
           <span className="home-bubble-q">Mélenchon ou de Gaulle&nbsp;?</span>
         </div>
         <p className="lead">
-          Une vraie citation, deux personnalités : à vous de trouver qui l&apos;a dite. Chaque bonne réponse vous fait
-          gagner la carte.
+          Une vraie citation, deux personnalités : trouvez qui l&apos;a dite et gagnez la carte.
         </p>
         <div className="actions">
           <Link href="/jouer" className="btn primary big">
@@ -39,6 +38,7 @@ export default function Home() {
           </Link>
         ))}
       </div>
+      <p className="home-credits">Citations réelles et datées · photos sous licence libre (Wikimedia Commons)</p>
     </section>
   );
 }

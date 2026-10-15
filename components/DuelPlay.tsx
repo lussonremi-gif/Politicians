@@ -46,7 +46,7 @@ function Lobby({ onOpen, embedded = false }: { onOpen: (id: string) => void; emb
   }
 
   return (
-    <section>
+    <section className="duel-lobby">
       {!embedded && (
         <div className="section-head">
           <h1 className="headline">Duel</h1>

@@ -1,17 +1,16 @@
-/** Cinq niveaux de rareté, selon le retentissement de la citation. */
-export type Rarity = "common" | "rare" | "epic" | "legendary" | "mythic";
+/** Quatre niveaux de rareté, selon le retentissement de la citation (légendaire au sommet). */
+export type Rarity = "common" | "rare" | "epic" | "legendary";
 
-export const RARITIES: Rarity[] = ["common", "rare", "epic", "legendary", "mythic"];
+export const RARITIES: Rarity[] = ["common", "rare", "epic", "legendary"];
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: "Commune",
   rare: "Rare",
   epic: "Épique",
   legendary: "Légendaire",
-  mythic: "Mythique",
 };
 
-export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
 
 export type Profile = {
   id: string;
@@ -111,6 +110,7 @@ export type BoosterType = {
   active: boolean;
   weights: Partial<Record<Rarity, number>> | null;
   tag: string | null;
+  guarantee?: string | null;
   party?: Party | null;
 };
 

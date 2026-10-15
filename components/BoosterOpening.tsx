@@ -12,45 +12,38 @@ import { RARITY_LABEL, RARITY_RANK, type OpenedCard, type Rarity } from "@/lib/t
  *   1. le booster flotte ; on le touche
  *   2. il se charge (tremblements, lumière qui fuit) plus ou moins longtemps selon sa meilleure carte
  *   3. il explose
- *   4. pour chaque carte, de la plus commune à la plus rare, un indice à la fois, seul à l'écran :
- *        lumière qui monte (couleur de la rareté)
- *        → le parti (écusson)
- *        → le poste, s'il y en a un
- *        → la carte d'un coup : photo + citation, onde de choc, éclats
- *          (feux d'artifice pour légendaire et mythique)
+ *   4. pour chaque carte, de la plus commune à la plus rare, un indice à la fois :
+ *        le parti (écusson) → le poste, s'il y en a un → la carte d'un coup (photo + citation)
+ *      Chaque indice entre, reste, puis sort en fondu avant le suivant ; le décor (faisceaux,
+ *      aurores, étincelles) prend la couleur de la rareté et s'emballe à chaque changement.
  *   5. récapitulatif
  * Toucher l'écran passe à l'indice suivant.
  */
 
 type Phase = "pack" | "charging" | "burst" | "reveal" | "summary";
 
-// Durée de la charge du booster selon sa meilleure carte
-const CHARGE_MS: Record<Rarity, number> = { common: 1000, rare: 1800, epic: 2400, legendary: 3200, mythic: 4000 };
-
 // Étapes d'une carte
-const INTRO = 0;
-const PARTY = 1;
-const ROLE = 2;
-const CARD = 3;
+const PARTY = 0;
+const ROLE = 1;
+const CARD = 2;
 
-// Temps passé sur chaque indice : [lumière, parti, poste]
-const HOLD_MS: Record<Rarity, [number, number, number]> = {
-  common: [700, 1400, 1400],
-  rare: [900, 1700, 1700],
-  epic: [1000, 1900, 1900],
-  legendary: [1200, 2200, 2200],
-  mythic: [1400, 2600, 2600],
-};
+// Durée de la charge du booster selon sa meilleure carte
+const CHARGE_MS: Record<Rarity, number> = { common: 1200, rare: 1900, epic: 2600, legendary: 3600 };
+
+// Temps passé sur chaque indice (parti, poste), entrée comprise
+const HOLD_MS: Record<Rarity, number> = { common: 1700, rare: 2000, epic: 2300, legendary: 2700 };
+
+// Durée de la sortie d'un indice avant l'entrée du suivant
+const LEAVE_MS = 380;
 
 const HINT: Record<Rarity, string> = {
   common: "Ouverture…",
   rare: "Ça brille…",
   epic: "Ça brille très fort…",
-  legendary: "Quelque chose de spécial se prépare…",
-  mythic: "Une phrase historique arrive…",
+  legendary: "Une phrase historique arrive…",
 };
 
-const big = (r: Rarity) => RARITY_RANK[r] >= RARITY_RANK.legendary;
+const isLegendary = (r: Rarity) => r === "legendary";
 
 function bestRarity(cards: OpenedCard[]): Rarity {
   return cards.reduce<Rarity>((b, c) => (RARITY_RANK[c.rarity] > RARITY_RANK[b] ? c.rarity : b), "common");
@@ -72,14 +65,61 @@ function seeded(seed: number) {
   };
 }
 
+/** Décor plein écran : aurores, faisceaux de stade, étincelles qui montent, sol lumineux. */
+function Stage({ pulse }: { pulse: string }) {
+  const sparks = useMemo(() => {
+    const rand = seeded(3);
+    return Array.from({ length: 36 }, () => ({
+      left: rand() * 100,
+      delay: -rand() * 6,
+      duration: 3 + rand() * 4,
+      size: 2 + rand() * 4,
+      drift: (rand() - 0.5) * 80,
+    }));
+  }, []);
+  return (
+    <div className="bo-bg" aria-hidden>
+      <div className="bo-aurora">
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="bo-beams">
+        {Array.from({ length: 6 }, (_, i) => (
+          <i key={i} style={{ ["--i" as string]: i }} />
+        ))}
+      </div>
+      <div className="bo-floor" />
+      <div className="bo-sparks">
+        {sparks.map((s, i) => (
+          <i
+            key={i}
+            style={{
+              left: `${s.left}%`,
+              width: s.size,
+              height: s.size,
+              animationDelay: `${s.delay}s`,
+              animationDuration: `${s.duration}s`,
+              ["--drift" as string]: `${s.drift}px`,
+            }}
+          />
+        ))}
+      </div>
+      {/* Lignes de vitesse : rejouées à chaque changement d'indice */}
+      {pulse && <div className="bo-warp" key={pulse} />}
+      <div className="bo-vignette" />
+    </div>
+  );
+}
+
 function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
   const rank = RARITY_RANK[rarity];
-  const count = [0, 22, 32, 50, 80][rank];
+  const count = [0, 24, 40, 80][rank];
   const parts = useMemo(() => {
     const rand = seeded(seed);
     return Array.from({ length: count }, (_, i) => ({
       angle: (360 / count) * i + rand() * 15,
-      distance: 160 + rand() * (rank >= 3 ? 320 : 170),
+      distance: 160 + rand() * (rank >= 3 ? 320 : 180),
       delay: rand() * 0.3,
       size: 4 + rand() * (rank >= 3 ? 10 : 6),
     }));
@@ -103,22 +143,21 @@ function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
   );
 }
 
-/** Feux d'artifice plein écran (légendaire et mythique). */
-function Fireworks({ rarity, seed }: { rarity: Rarity; seed: number }) {
+/** Feux d'artifice plein écran (légendaire). */
+function Fireworks({ seed }: { seed: number }) {
   const bursts = useMemo(() => {
     const rand = seeded(seed + 7);
-    const n = rarity === "mythic" ? 7 : 4;
-    return Array.from({ length: n }, (_, i) => ({
-      x: 10 + rand() * 80,
+    return Array.from({ length: 7 }, (_, i) => ({
+      x: 8 + rand() * 84,
       y: 8 + rand() * 50,
-      delay: 0.3 + i * 0.35 + rand() * 0.2,
-      hue: rarity === "mythic" ? ["#2f5597", "#ffffff", "#c8313b"][i % 3] : ["#ffd66b", "#fff1b8", "#ffb347"][i % 3],
+      delay: 0.25 + i * 0.3 + rand() * 0.2,
+      hue: ["#ffd66b", "#fff1b8", "#ffb347", "#ffffff"][i % 4],
     }));
-  }, [rarity, seed]);
+  }, [seed]);
   return (
     <div className="bo-fireworks" aria-hidden>
       {bursts.map((b, i) => (
-        <span key={i} className="firework" style={{ left: `${b.x}%`, top: `${b.y}%`, animationDelay: `${b.delay}s`, ["--fw" as string]: b.hue }}>
+        <span key={i} className="firework" style={{ left: `${b.x}%`, top: `${b.y}%`, ["--fw" as string]: b.hue }}>
           {Array.from({ length: 12 }, (_, j) => (
             <i key={j} style={{ ["--r" as string]: `${j * 30}deg`, animationDelay: `${b.delay}s` }} />
           ))}
@@ -126,6 +165,28 @@ function Fireworks({ rarity, seed }: { rarity: Rarity; seed: number }) {
       ))}
     </div>
   );
+}
+
+/** Facteur de zoom pour que les cartes du récapitulatif (230 × 360) tiennent dans l'écran. */
+function useSummaryZoom(count: number) {
+  const [zoom, setZoom] = useState(1);
+  useEffect(() => {
+    function fit() {
+      // On essaie 3, 2 ou 1 carte par ligne et on garde la disposition où les cartes sont les plus grandes
+      let best = 0.35;
+      for (let perRow = Math.min(count, 3); perRow >= 1; perRow--) {
+        const rows = Math.ceil(count / perRow);
+        const byWidth = (window.innerWidth - 32 - (perRow - 1) * 14) / perRow / 230;
+        const byHeight = (window.innerHeight - 210 - (rows - 1) * 14) / rows / 360;
+        best = Math.max(best, Math.min(1, byWidth, byHeight));
+      }
+      setZoom(best);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [count]);
+  return zoom;
 }
 
 export function BoosterOpening({
@@ -145,9 +206,11 @@ export function BoosterOpening({
   const best = bestRarity(prepared);
   const [phase, setPhase] = useState<Phase>("pack");
   const [index, setIndex] = useState(0);
-  const [step, setStep] = useState(INTRO);
+  const [step, setStep] = useState(PARTY);
+  const [leaving, setLeaving] = useState(false);
   const [muted, setMutedState] = useState(sfx.isMuted());
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const summaryZoom = useSummaryZoom(cards.length);
 
   const current = ordered[index];
   const role = splitRole(current?.role);
@@ -170,7 +233,7 @@ export function BoosterOpening({
     };
   }, []);
 
-  // Charge → explosion → première carte
+  // Charge → explosion → premier indice de la première carte
   useEffect(() => {
     if (phase !== "charging") return;
     sfx.riser(CHARGE_MS[best] / 1000, RARITY_RANK[best]);
@@ -179,48 +242,53 @@ export function BoosterOpening({
       setPhase("burst");
       later(() => {
         setIndex(0);
-        setStep(INTRO);
+        setStep(PARTY);
         setPhase("reveal");
-      }, 650);
+        sfx.thud();
+      }, 600);
     }, CHARGE_MS[best]);
   }, [phase, best, later]);
 
-  /** Passe à l'indice suivant de la carte courante (le poste est sauté s'il n'y en a pas). */
+  /** L'indice courant sort en fondu, puis le suivant entre (le poste est sauté s'il n'y en a pas). */
   const nextStep = useCallback(() => {
-    if (!current) return;
+    if (!current || leaving) return;
     const next = step === PARTY && !role ? CARD : step + 1;
-    if (next === PARTY || next === ROLE) sfx.thud();
-    if (next === CARD) sfx.reveal(RARITY_RANK[current.rarity]);
-    setStep(next);
-  }, [current, step, role]);
+    setLeaving(true);
+    sfx.whoosh();
+    later(() => {
+      setLeaving(false);
+      setStep(next);
+      if (next === CARD) sfx.reveal(RARITY_RANK[current.rarity]);
+      else sfx.thud();
+    }, LEAVE_MS);
+  }, [current, step, role, leaving, later]);
 
   // Enchaînement automatique des indices
   useEffect(() => {
-    if (phase !== "reveal" || !current || step >= CARD) return;
-    const t = setTimeout(nextStep, HOLD_MS[current.rarity][step]);
+    if (phase !== "reveal" || !current || step >= CARD || leaving) return;
+    const t = setTimeout(nextStep, HOLD_MS[current.rarity]);
     return () => clearTimeout(t);
-  }, [phase, step, current, nextStep]);
-
-  // Petite montée sonore pendant que la lumière monte
-  useEffect(() => {
-    if (phase === "reveal" && current && step === INTRO) {
-      sfx.riser(HOLD_MS[current.rarity][INTRO] / 1000, RARITY_RANK[current.rarity]);
-    }
-  }, [phase, step, current]);
+  }, [phase, step, current, leaving, nextStep]);
 
   function advance() {
     if (phase === "pack") {
       setPhase("charging");
       return;
     }
-    if (phase !== "reveal" || !current) return;
+    if (phase !== "reveal" || !current || leaving) return;
     if (step < CARD) {
       nextStep();
       return;
     }
     if (index + 1 < ordered.length) {
-      setIndex(index + 1);
-      setStep(INTRO);
+      setLeaving(true);
+      sfx.whoosh();
+      later(() => {
+        setLeaving(false);
+        setIndex(index + 1);
+        setStep(PARTY);
+        sfx.thud();
+      }, LEAVE_MS);
     } else {
       setPhase("summary");
     }
@@ -247,28 +315,19 @@ export function BoosterOpening({
 
   const stage: Rarity | "none" =
     phase === "reveal" && current ? current.rarity : phase === "charging" || phase === "burst" ? best : "none";
-  // Les rayons tournent dès la charge, et accélèrent quand la carte apparaît
-  const showRays = phase === "charging" || phase === "burst" || phase === "reveal";
-  const quake = phase === "reveal" && step === CARD && current && big(current.rarity);
+  const revealed = phase === "reveal" && step === CARD && !leaving && current;
+  const pulse = phase === "reveal" ? `${index}-${step}` : phase === "burst" ? "burst" : "";
 
   return (
     <div
       className={`bo-overlay stage-${stage} phase-${phase} ${phase === "reveal" ? `step-${step}` : ""}`}
+      style={{ ["--party" as string]: phase === "reveal" ? current?.party_color ?? "#2f5bd3" : accent }}
       role="dialog"
       aria-modal="true"
       aria-label={`Ouverture : ${boosterName}`}
       onClick={phase === "summary" ? undefined : advance}
     >
-      {/* Fond plein écran : couvre toujours tout le viewport, quelle que soit sa taille */}
-      <div className="bo-bg" aria-hidden>
-        {showRays && <div className="bo-bg-rays" />}
-        <div className="bo-bg-vignette" />
-      </div>
-      <div className="bo-spotlights" aria-hidden>
-        <span />
-        <span />
-      </div>
-      <div className="bo-dust" aria-hidden />
+      <Stage pulse={pulse} />
 
       <div className="bo-controls">
         <button className="bo-ctl" onClick={toggleMute} aria-label={muted ? "Activer le son" : "Couper le son"}>
@@ -280,6 +339,7 @@ export function BoosterOpening({
             onClick={(e) => {
               e.stopPropagation();
               clearTimers();
+              setLeaving(false);
               setPhase("summary");
             }}
           >
@@ -305,55 +365,50 @@ export function BoosterOpening({
         </div>
       )}
 
-      {/* Coupure lumineuse entre deux indices (à la racine : plein écran même pendant le tremblement) */}
-      {phase === "reveal" && step > INTRO && <div className="wo-cut" key={`cut-${index}-${step}`} aria-hidden />}
-
-      {quake && <Fireworks key={`fw-${index}`} rarity={current.rarity} seed={index + 1} />}
+      {revealed && <div className={`bo-flash ${current.rarity}`} key={`flash-${index}`} aria-hidden />}
+      {revealed && isLegendary(current.rarity) && <Fireworks key={`fw-${index}`} seed={index + 1} />}
 
       {phase === "reveal" && current && (
-        <div className={`bo-center wo ${quake ? "quake" : ""}`} key={index}>
+        <div className={`bo-center wo ${revealed && RARITY_RANK[current.rarity] >= 2 ? "quake" : ""}`}>
           <p className="bo-counter">
             Carte {index + 1}/{ordered.length}
           </p>
 
-          {step < CARD && (
-            <div className={`wo-stage wo-${current.rarity}`} key={`step-${step}`}>
-              {step === INTRO && <div className="wo-glow" aria-hidden />}
-
-              {step === PARTY && (
-                <div className={`wo-clue wo-party ${current.party_color ? "" : "no-party"}`} style={{ ["--party" as string]: current.party_color ?? "#2f5bd3" }}>
-                  <span className="wo-label">Parti</span>
+          <div className={`wo-slot ${leaving ? "leaving" : ""}`} key={`${index}-${step}`}>
+            {step === PARTY && (
+              <div className={`wo-clue wo-party ${current.party_color ? "" : "no-party"}`}>
+                <span className="wo-label">Parti</span>
+                <span className="wo-crest-wrap">
+                  <span className="wo-crest-glow" aria-hidden />
                   <span className="wo-crest">
                     <span className="wo-crest-text">{current.party_short ?? "SE"}</span>
                   </span>
-                  <span className="wo-ring" aria-hidden />
-                  <span className="wo-ring late" aria-hidden />
-                  <strong className="wo-party-name">{current.party_name ?? "Sans étiquette"}</strong>
-                </div>
-              )}
+                </span>
+                <strong className="wo-party-name">{current.party_name ?? "Sans étiquette"}</strong>
+              </div>
+            )}
 
-              {step === ROLE && role && (
-                <div className="wo-clue wo-role" style={{ ["--party" as string]: current.party_color ?? "#2f5bd3" }}>
-                  <span className="wo-label">Poste</span>
-                  <strong className="wo-role-title">{role.title}</strong>
-                  {role.period && <span className="wo-role-period">{role.period}</span>}
-                  <span className="wo-underline" aria-hidden />
-                </div>
-              )}
-            </div>
-          )}
+            {step === ROLE && role && (
+              <div className="wo-clue wo-role">
+                <span className="wo-label">Poste</span>
+                <strong className="wo-role-title">{role.title}</strong>
+                {role.period && <span className="wo-role-period">{role.period}</span>}
+                <span className="wo-underline" aria-hidden />
+              </div>
+            )}
 
-          {step === CARD && (
-            <div className={`bo-card enter-${current.rarity}`} onClick={(e) => e.stopPropagation()}>
-              <span className="wo-shockwave" aria-hidden />
-              <Particles rarity={current.rarity} seed={index + 1} />
-              <CollectibleCard card={current} />
-              <span className={`bo-banner ${current.rarity}`}>
-                {RARITY_LABEL[current.rarity]}
-                {current.new ? " · Nouvelle !" : ""}
-              </span>
-            </div>
-          )}
+            {step === CARD && (
+              <div className={`bo-card enter-${current.rarity}`} onClick={(e) => e.stopPropagation()}>
+                <span className="wo-shockwave" aria-hidden />
+                <Particles rarity={current.rarity} seed={index + 1} />
+                <CollectibleCard card={current} />
+                <span className={`bo-banner ${current.rarity}`}>
+                  {RARITY_LABEL[current.rarity]}
+                  {current.new ? " · Nouvelle !" : ""}
+                </span>
+              </div>
+            )}
+          </div>
 
           <p className="bo-hint">
             {step < CARD ? "Touchez pour continuer" : index + 1 < ordered.length ? "Touchez pour la carte suivante" : "Touchez pour voir le résumé"}
@@ -366,7 +421,7 @@ export function BoosterOpening({
           <h2>{boosterName}</h2>
           <div className="bo-summary-grid">
             {ordered.map((c, i) => (
-              <div key={i} className="deal" style={{ animationDelay: `${i * 0.08}s` }}>
+              <div key={i} className="deal" style={{ animationDelay: `${i * 0.08}s`, zoom: summaryZoom }}>
                 <CollectibleCard card={c} />
               </div>
             ))}

@@ -110,18 +110,23 @@ export function thud() {
   noise(0, 0.15, 0.12, 1200, 200);
 }
 
+/** Souffle rapide entre deux indices de l'ouverture. */
+export function whoosh() {
+  noise(0, 0.35, 0.09, 600, 5000);
+}
+
 /** Petit clic de machine à écrire. */
 export function tick() {
   tone("square", 1700 + Math.random() * 400, 1200, 0, 0.025, 0.012);
 }
 
-/** Révélation de la carte, plus ou moins spectaculaire selon la rareté (0 = commune … 4 = mythique). */
+/** Révélation de la carte, plus ou moins spectaculaire selon la rareté (0 = commune … 3 = légendaire). */
 export function reveal(rank: number) {
   tone("sine", 110, 35, 0, 0.8 + rank * 0.25, 0.3 + rank * 0.05);
   noise(0, 0.6 + rank * 0.1, 0.12 + rank * 0.04, 6000, 400);
   if (rank >= 1) {
     // Accord scintillant
-    const notes = rank >= 4 ? [523, 659, 784, 1047, 1319, 1568] : rank >= 3 ? [523, 659, 784, 1047, 1319] : [659, 784, 988];
+    const notes = rank >= 3 ? [523, 659, 784, 1047, 1319, 1568] : rank >= 2 ? [523, 659, 784, 1047] : [659, 784, 988];
     notes.forEach((f, i) => tone("triangle", f, f, 0.05 + i * 0.07, 1.2 + rank * 0.2, 0.05));
   }
   if (rank >= 3) {

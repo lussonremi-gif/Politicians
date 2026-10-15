@@ -16,6 +16,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#fff8ec",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -31,10 +34,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <RequireAccount>
             <Header />
             <main className="page">{children}</main>
-            <footer className="site-footer">
-              <span className="tricolor small" aria-hidden />
-              <p>Citations réelles et datées · photos sous licence libre (Wikimedia Commons)</p>
-            </footer>
           </RequireAccount>
         </AuthProvider>
       </body>
