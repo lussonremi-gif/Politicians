@@ -6,7 +6,9 @@ import { useAuth } from "@/components/AuthProvider";
 import { Countdown } from "@/components/Countdown";
 import { Gate } from "@/components/Gate";
 import { CollectibleCard } from "@/components/CollectibleCard";
+import { Confetti } from "@/components/Confetti";
 import { QuoteDuel } from "@/components/QuoteDuel";
+import * as sfx from "@/lib/sfx";
 import { errorMessage, getSupabase } from "@/lib/supabase";
 import { formatDate, type AnswerResult, type GameMode, type Question, type Theme } from "@/lib/types";
 
@@ -28,15 +30,17 @@ function Setup({ initial, onStart, busy }: { initial: Config; onStart: (c: Confi
 
   return (
     <section className="hero">
-      <h1 className="headline">Nouvelle partie</h1>
+      <h1 className="headline">Solo</h1>
       <span className="tricolor" aria-hidden />
 
       <div className="mode-grid">
         <button className={`mode-card ${mode === "classic" ? "active" : ""}`} onClick={() => setMode("classic")}>
+          <span className="mode-emoji" aria-hidden>🎯</span>
           <strong>Classique</strong>
           <span>{QUESTIONS_PER_GAME} citations, le contexte après chaque réponse</span>
         </button>
         <button className={`mode-card ${mode === "chrono" ? "active" : ""}`} onClick={() => setMode("chrono")}>
+          <span className="mode-emoji" aria-hidden>⏱️</span>
           <strong>Chrono</strong>
           <span>Un maximum de bonnes réponses en {CHRONO_SECONDS} secondes</span>
         </button>
@@ -134,6 +138,8 @@ function Game() {
       if (error) throw error;
       const res = data as AnswerResult;
       setResult(res);
+      if (res.correct) sfx.correct();
+      else sfx.wrong();
       // En chrono, on enchaîne sans s'arrêter sur le contexte
       if (question.mode === "chrono") {
         advanceTimer.current = setTimeout(() => loadNext(session), 700);
@@ -187,11 +193,13 @@ function Game() {
   const streak = result?.streak ?? question.streak;
 
   return (
-    <section className="game">
+    <section className={`game ${result && !result.correct ? "shake-wrong" : ""}`}>
+      {result?.correct && <Confetti key={question.question_id} seed={question.position} count={chrono ? 30 : 80} />}
+      {result?.correct && <span className="points-pop" key={`p-${question.question_id}`}>+{result.points}</span>}
       <div className="game-status">
         <span>{chrono ? `Chrono · question ${question.position}` : `Question ${question.position}/${question.total}`}</span>
         <span>{(result ? question.score + result.points : question.score).toLocaleString("fr-FR")} pts</span>
-        <span className={streak >= 3 ? "streak hot" : "streak"}>Série : {streak}</span>
+        <span className={streak >= 3 ? "streak hot" : "streak"}>{streak >= 3 ? "🔥" : "⚡"} Série : {streak}</span>
         {config.theme && <span className="capitalize">Thème : {config.theme}</span>}
       </div>
       {chrono && question.ends_at && (

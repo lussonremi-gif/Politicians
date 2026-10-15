@@ -31,7 +31,7 @@ function Collection() {
 
   useEffect(() => {
     getSupabase()
-      .rpc("my_album")
+      .rpc("collection_album")
       .then(({ data, error }) => {
         if (error) setError(errorMessage(error));
         else setRows((data as AlbumRow[]) ?? []);
@@ -138,7 +138,7 @@ function Collection() {
         <div className="center">
           <p className="muted">Aucune carte ici pour l&apos;instant.</p>
           <div className="actions">
-            <Link href="/jouer" className="btn primary">Jouer</Link>
+            <Link href="/solo" className="btn primary">Jouer en solo</Link>
             <Link href="/boosters" className="btn">Ouvrir un booster</Link>
           </div>
         </div>
@@ -148,7 +148,7 @@ function Collection() {
         <section key={g.slug} className="album-row" style={{ ["--party" as string]: g.party_color ?? "#8d939c" }}>
           <header>
             <span className="album-avatar">
-              <Photo src={g.image_url} name={g.name} />
+              <Photo src={g.cards.find((c) => c.fallback_image_url)?.fallback_image_url ?? g.image_url} name={g.name} />
             </span>
             <div>
               <h3>{g.name}</h3>

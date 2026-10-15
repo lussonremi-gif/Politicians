@@ -24,7 +24,7 @@ export function CollectibleCard({ card, locked = false }: { card: GameCard; lock
       <div className="ccard-inner">
         <div className="ccard-face ccard-front">
           <div className="ccard-photo">
-            <Photo src={card.image_url} name={card.name} />
+            <Photo src={card.image_url} fallbackSrc={card.fallback_image_url} focus={card.image_focus} name={card.name} />
           </div>
           <div className="ccard-shine" aria-hidden />
           <div className="ccard-top">

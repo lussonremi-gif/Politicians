@@ -4,9 +4,11 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
+import { Confetti } from "@/components/Confetti";
 import { Countdown } from "@/components/Countdown";
 import { Gate } from "@/components/Gate";
 import { QuoteDuel } from "@/components/QuoteDuel";
+import * as sfx from "@/lib/sfx";
 import { errorMessage, getSupabase } from "@/lib/supabase";
 import { formatDate, type DuelReveal, type DuelState, type DuelSummary } from "@/lib/types";
 
@@ -50,7 +52,7 @@ function Lobby({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <section>
       <div className="section-head">
-        <h1 className="headline">Duel</h1>
+        <h1 className="headline">Multi</h1>
         <span className="tricolor" aria-hidden />
         <p className="lead">
           1 contre 1 en temps réel : la même série de citations pour les deux joueurs, 15 secondes par réponse. Le
@@ -217,6 +219,8 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
     }
     const s = data as DuelState;
     offset.current = new Date(s.server_now).getTime() - Date.now();
+    if (s.reveal?.mine?.correct) sfx.correct();
+    else sfx.wrong();
     setState(s);
   }
 
@@ -230,7 +234,7 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
   async function rematch() {
     const { data, error } = await getSupabase().rpc("create_duel", {});
     if (error) return setError(errorMessage(error));
-    window.location.href = `/duel?id=${(data as { id: string }).id}`;
+    window.location.href = `/multi?id=${(data as { id: string }).id}`;
   }
 
   if (error && !state) {
@@ -246,7 +250,7 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
   const opponent = state.opponent_name ?? "Adversaire";
   const now = Date.now() + offset.current;
   const servedAt = state.served_at ? new Date(state.served_at).getTime() : 0;
-  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/duel?code=${state.code}` : "";
+  const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/multi?code=${state.code}` : "";
 
   // --- En attente d'un adversaire
   if (state.status === "waiting") {
@@ -304,6 +308,7 @@ function DuelRoom({ id, onLeave }: { id: string; onLeave: () => void }) {
         : null;
     return (
       <section className="hero">
+        {state.winner === "me" && <Confetti seed={7} count={120} />}
         {scoreboard}
         <h1 className="headline">{title}</h1>
         <span className="tricolor" aria-hidden />
@@ -371,23 +376,23 @@ function DuelRoot() {
   const code = params.get("code");
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  // Lien d'invitation /duel?code=XXXXXX : on rejoint automatiquement
+  // Lien d'invitation /multi?code=XXXXXX : on rejoint automatiquement
   useEffect(() => {
     if (!code || id) return;
     getSupabase()
       .rpc("join_duel", { p_code: code })
       .then(({ data, error }) => {
         if (error) setJoinError(errorMessage(error));
-        else router.replace(`/duel?id=${data as string}`);
+        else router.replace(`/multi?id=${data as string}`);
       });
   }, [code, id, router]);
 
-  if (id) return <DuelRoom key={id} id={id} onLeave={() => router.push("/duel")} />;
+  if (id) return <DuelRoom key={id} id={id} onLeave={() => router.push("/multi")} />;
   if (code && !joinError) return <p className="muted center">Connexion au duel…</p>;
   return (
     <>
       {joinError && <p className="notice error center">{joinError}</p>}
-      <Lobby onOpen={(duelId) => router.push(`/duel?id=${duelId}`)} />
+      <Lobby onOpen={(duelId) => router.push(`/multi?id=${duelId}`)} />
     </>
   );
 }

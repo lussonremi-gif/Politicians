@@ -33,6 +33,8 @@ export type Option = {
   image_url: string | null;
   party_short?: string | null;
   party_color?: string | null;
+  image_focus?: string | null;
+  kind?: "politician" | "personality";
 };
 
 export type GameMode = "classic" | "chrono";
@@ -73,6 +75,8 @@ export type GameCard = {
   image_credit: string | null;
   image_license: string | null;
   image_source_url: string | null;
+  image_focus?: string | null;
+  fallback_image_url?: string | null;
   party_name: string | null;
   party_short: string | null;
   party_color: string | null;

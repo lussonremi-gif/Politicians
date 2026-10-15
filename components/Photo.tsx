@@ -12,10 +12,28 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-/** Photo d'une personnalité, avec monogramme de repli si l'image est absente ou ne charge pas. */
-export function Photo({ src, name, className }: { src: string | null; name: string; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  if (!src || failed) {
+/**
+ * Photo d'une personnalité. Si l'image ne charge pas, essaie la photo de repli
+ * (photo générale de la personnalité), puis affiche un monogramme.
+ */
+export function Photo({
+  src,
+  name,
+  className,
+  fallbackSrc,
+  focus,
+}: {
+  src: string | null;
+  name: string;
+  className?: string;
+  fallbackSrc?: string | null;
+  focus?: string | null;
+}) {
+  const candidates = [src, fallbackSrc].filter((s, i, all): s is string => !!s && all.indexOf(s) === i);
+  const [attempt, setAttempt] = useState(0);
+  const current = candidates[attempt];
+
+  if (!current) {
     return (
       <div className={`portrait-fallback ${className ?? ""}`} aria-hidden>
         <span>{initials(name)}</span>
@@ -26,11 +44,12 @@ export function Photo({ src, name, className }: { src: string | null; name: stri
     // eslint-disable-next-line @next/next/no-img-element
     <img
       className={className}
-      src={src}
+      src={current}
       alt={name}
       loading="lazy"
       referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
+      style={focus ? { objectPosition: focus } : undefined}
+      onError={() => setAttempt((a) => a + 1)}
     />
   );
 }

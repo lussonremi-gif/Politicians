@@ -11,12 +11,11 @@ les points ouvrent des boosters pour compléter sa collection. Le verso de chaqu
 | Écran | Route | Contenu |
 |---|---|---|
 | Accueil | `/` | Présentation et boucle de jeu |
-| Partie | `/jouer` | Choix du mode (classique 10 citations ou chrono 60 s) et du thème, contexte après chaque réponse |
-| Duel | `/duel` | Créer un duel (code + lien à partager), rejoindre, partie en temps réel, résultat, historique |
+| Solo | `/solo` | Choix du mode (classique 10 citations ou chrono 60 s) et du thème, contexte après chaque réponse |
+| Multi | `/multi` | Créer un duel (code + lien à partager), rejoindre, partie en temps réel, résultat, historique |
 | Amis | `/amis` | Pseudo, code ami, ajout d'amis, classement entre amis |
 | Collection | `/collection` | Album des personnalités politiques (3 versions par personnalité, cartes manquantes grisées, filtre par parti) et collection de citations |
 | Boosters | `/boosters` | Personnalités (classique, premium, par parti) et citations (par thème) ; ouverture animée, plus spectaculaire selon la rareté |
-| À propos / Méthodologie | `/a-propos`, `/methodologie` | Règles du jeu et règles éditoriales |
 
 Pas encore fait : comptes avec e-mail (la partie invitée est liée au navigateur), défi asynchrone entre amis.
 
@@ -34,9 +33,12 @@ y sont appliquées, ainsi que les données de démo de `supabase/seed.sql`.
 | `…000400_storage.sql` | Bucket public `portraits` (écriture réservée aux éditeurs) |
 | `…000500_politician_cards.sql` | Partis, personnalités, versions de cartes (année, intitulé, rareté), boosters de personnalités et par parti |
 | `…000600_booster_active.sql` | Boosters désactivables (masqués de la boutique) |
+| `…000800_card_photos_personalities.sql` | Photo propre à chaque carte (époque de la citation), personnalités hors politique utilisées comme pièges, `collection_album()` |
 | `…000700_quote_cards.sql` | **Modèle actuel** : une carte = une personnalité + une citation (table `cards`), 6 raretés, mêmes cartes pour le jeu, les duels, les boosters et l'album (`my_album()`) |
 
-**Contenu actuel : `supabase/seed_quote_cards.sql`** (32 cartes, 22 personnalités dont 17 avec des cartes). Les tables
+**Contenu actuel : `supabase/seed_quote_cards.sql` + `supabase/seed_more_cards.sql`** (49 cartes, 23 personnalités
+politiques avec cartes, 8 personnalités hors politique comme pièges : Greta Thunberg, Didier Deschamps, Albert Camus…).
+Ancienne ligne : (32 cartes, 22 personnalités dont 17 avec des cartes). Les tables
 `quotes`, `personalities`, `politician_cards` et les fichiers `seed.sql` / `seed_politicians.sql` correspondent aux
 versions précédentes et ne sont plus utilisés par l'application.
 

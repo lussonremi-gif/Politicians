@@ -161,7 +161,7 @@ function Friends() {
           </>
         )}
         <div className="actions">
-          <Link href="/duel" className="btn primary">Défier un ami en duel</Link>
+          <Link href="/multi" className="btn primary">Défier un ami en multi</Link>
         </div>
       </div>
     </section>

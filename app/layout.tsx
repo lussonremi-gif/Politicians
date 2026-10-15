@@ -1,31 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Crimson_Pro } from "next/font/google";
+import { Bricolage_Grotesque, Crimson_Pro } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Header } from "@/components/Header";
 import "./globals.css";
 
-const serif = Crimson_Pro({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-serif" });
+// Serif pour les citations, display arrondie et expressive pour l'interface
+const serif = Crimson_Pro({ subsets: ["latin"], weight: ["400", "500", "600"], style: ["normal", "italic"], variable: "--font-serif" });
+const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["400", "600", "800"], variable: "--font-display" });
 
 export const metadata: Metadata = {
-  title: "Qui l'a dit ? · Présidentielle 2027",
-  description: "Le jeu de cartes qui fait découvrir les candidats à la présidentielle 2027 à travers leurs propres citations.",
+  title: "Qui l'a dit ? · Le jeu des citations politiques",
+  description: "Une vraie citation, deux personnalités : qui l'a dit ? Jouez, ouvrez des boosters et collectionnez les phrases cultes de la politique française.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f7f5f1",
+  themeColor: "#fff8ec",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={serif.variable}>
+    <html lang="fr" className={`${serif.variable} ${display.variable}`}>
       <body>
         <AuthProvider>
-          <div className="backdrop" aria-hidden />
+          <div className="backdrop" aria-hidden>
+            <span className="blob blob-blue" />
+            <span className="blob blob-red" />
+            <span className="blob blob-gold" />
+          </div>
           <Header />
           <main className="page">{children}</main>
           <footer className="site-footer">
             <span className="tricolor small" aria-hidden />
-            <p>Un jeu neutre : même traitement pour chaque candidat, chaque citation sourcée.</p>
+            <p>Citations réelles et datées · photos sous licence libre (Wikimedia Commons)</p>
           </footer>
         </AuthProvider>
       </body>

@@ -5,13 +5,11 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
 const NAV = [
-  { href: "/jouer", label: "Jouer" },
-  { href: "/duel", label: "Duel" },
-  { href: "/collection", label: "Collection" },
-  { href: "/boosters", label: "Boosters" },
-  { href: "/amis", label: "Amis" },
-  { href: "/a-propos", label: "À propos" },
-  { href: "/methodologie", label: "Méthodologie" },
+  { href: "/solo", label: "Solo", icon: "🎯" },
+  { href: "/multi", label: "Multi", icon: "⚔️" },
+  { href: "/boosters", label: "Boosters", icon: "🎁" },
+  { href: "/collection", label: "Collection", icon: "🃏" },
+  { href: "/amis", label: "Amis", icon: "👥" },
 ];
 
 export function Header() {
@@ -21,22 +19,22 @@ export function Header() {
   return (
     <header className="site-header">
       <Link href="/" className="brand" aria-label="Accueil">
-        <span className="brand-title">
+        <span className="brand-bubble">Qui l&apos;a dit&nbsp;?</span>
+        <span className="brand-sub">
           Présidentielle <span className="blue">20</span>
           <span className="red">27</span>
         </span>
-        <span className="tricolor small" aria-hidden />
       </Link>
       <nav className="site-nav">
         {NAV.map((item) => (
-          <Link key={item.href} href={item.href} className={pathname === item.href ? "active" : undefined}>
-            {item.label}
+          <Link key={item.href} href={item.href} className={pathname.startsWith(item.href) ? "nav-pill active" : "nav-pill"}>
+            <span aria-hidden>{item.icon}</span> {item.label}
           </Link>
         ))}
         {profile && (
-          <span className="points-badge" title="Vos points">
-            {profile.points.toLocaleString("fr-FR")} pts
-          </span>
+          <Link href="/boosters" className="points-badge" title="Vos points">
+            <span aria-hidden>🪙</span> {profile.points.toLocaleString("fr-FR")}
+          </Link>
         )}
       </nav>
     </header>
