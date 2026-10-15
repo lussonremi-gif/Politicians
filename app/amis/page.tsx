@@ -7,8 +7,6 @@ import { Gate } from "@/components/Gate";
 import { errorMessage, getSupabase } from "@/lib/supabase";
 import type { LeaderRow } from "@/lib/types";
 
-const USERNAME_PATTERN = /^[\p{L}\p{N}_ .\-]{2,20}$/u;
-
 function normalizeFriendInput(raw: string): string {
   const text = raw.trim();
   const fromLink = text.match(/[?&]ajouter=([A-Za-z0-9]+)/i);
@@ -17,13 +15,11 @@ function normalizeFriendInput(raw: string): string {
 }
 
 function Friends() {
-  const { profile, refreshProfile } = useAuth();
-  const [username, setUsername] = useState(profile?.username ?? "");
+  const { profile } = useAuth();
   const [friendInput, setFriendInput] = useState("");
   const [board, setBoard] = useState<LeaderRow[] | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
-  const [savingAccount, setSavingAccount] = useState(false);
   const invited = useRef<string | null>(null);
 
   const loadBoard = useCallback(async () => {
@@ -35,10 +31,6 @@ function Friends() {
   useEffect(() => {
     if (profile?.username) loadBoard();
   }, [loadBoard, profile?.username]);
-
-  useEffect(() => {
-    setUsername(profile?.username ?? "");
-  }, [profile?.username]);
 
   const addFriendCode = useCallback(async (raw: string) => {
     const token = normalizeFriendInput(raw);
@@ -74,22 +66,6 @@ function Friends() {
     });
   }, [profile?.username, addFriendCode]);
 
-  async function saveUsername(e: React.FormEvent) {
-    e.preventDefault();
-    if (!profile) return;
-    const next = username.trim();
-    if (!USERNAME_PATTERN.test(next)) {
-      setMessage({ kind: "error", text: "Pseudo invalide : 2 à 20 caractères (lettres, chiffres, espace, _ . -)." });
-      return;
-    }
-    setSavingAccount(true);
-    const { error } = await getSupabase().from("profiles").update({ username: next }).eq("id", profile.id);
-    setSavingAccount(false);
-    if (error) return setMessage({ kind: "error", text: errorMessage(error) });
-    setMessage({ kind: "ok", text: "Pseudo enregistré." });
-    await refreshProfile();
-  }
-
   async function addFriend(e: React.FormEvent) {
     e.preventDefault();
     await addFriendCode(friendInput);
@@ -116,46 +92,26 @@ function Friends() {
   const friends = (board ?? []).filter((row) => !row.is_me);
 
   return (
-    <section>
-      <div className="section-head">
+    <section className="screen-fit">
+      <div className="section-head compact">
         <h1 className="headline">Amis</h1>
-        <span className="tricolor" aria-hidden />
-        <p className="lead">Ajoutez vos amis avec leur code ou leur lien, et comparez vos scores.</p>
-        <p className="account-status">Connecté en tant que {profile.username}. Ce compte reste sur cet appareil.</p>
+        <p className="lead">Code, invitations et classement.</p>
       </div>
 
       {message && <p className={`notice center ${message.kind === "error" ? "error" : "success"}`}>{message.text}</p>}
 
-      <div className="panel-grid">
-        <form className="panel" onSubmit={saveUsername}>
-          <h2>Mon pseudo</h2>
-          <p className="muted">C&apos;est le nom que voient vos amis et vos adversaires.</p>
-          <div className="inline-form">
-            <input
-              className="input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Votre pseudo"
-              maxLength={20}
-              aria-label="Pseudo"
-            />
-            <button className="btn primary" type="submit" disabled={savingAccount}>Enregistrer</button>
-          </div>
-        </form>
-
+      <div className="panel-grid friends-top">
         <div className="panel">
           <h2>Mon code ami</h2>
-          <p className="muted">À donner à vos amis, ou envoyez-leur le lien : ils sont ajoutés en l&apos;ouvrant.</p>
           <div className="inline-form">
             <span className="friend-code">{profile.friend_code}</span>
             <button className="btn" type="button" onClick={() => copy("code")}>{copied === "code" ? "Copié !" : "Copier"}</button>
-            <button className="btn" type="button" onClick={() => copy("link")}>{copied === "link" ? "Lien copié !" : "Copier le lien"}</button>
+            <button className="btn" type="button" onClick={() => copy("link")}>{copied === "link" ? "Lien copié !" : "Lien"}</button>
           </div>
         </div>
 
         <form className="panel" onSubmit={addFriend}>
           <h2>Ajouter un ami</h2>
-          <p className="muted">Collez un code ami ou un lien d&apos;invitation. Vous pouvez en ajouter plusieurs à la suite.</p>
           <div className="inline-form">
             <input
               className="input"
@@ -171,72 +127,72 @@ function Friends() {
         </form>
       </div>
 
-      <div className="split-panels">
-      <div className="panel">
-        <h2>Mes amis</h2>
-        {!board ? (
-          <p className="muted">Chargement…</p>
-        ) : friends.length === 0 ? (
-          <p className="muted">Pas encore d&apos;amis. Copiez votre lien et envoyez-le, ou collez le leur ci-dessus.</p>
-        ) : (
-          <ul className="friend-list">
-            {friends.map((row) => (
-              <li key={row.user_id}>
-                <span>{row.username}</span>
-                <button className="link-btn" onClick={() => removeFriend(row)} aria-label={`Retirer ${row.username}`}>
-                  Retirer
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      <div className="panel">
-        <h2>Classement entre amis</h2>
-        {!board ? (
-          <p className="muted">Chargement…</p>
-        ) : (
-          <>
-            <table className="leaderboard">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Joueur</th>
-                  <th>Points gagnés</th>
-                  <th className="hide-sm">Cartes</th>
-                  <th className="hide-sm">Meilleure série</th>
-                  <th className="hide-sm">Duels gagnés</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {board.map((r, i) => (
-                  <tr key={r.user_id} className={r.is_me ? "me" : undefined}>
-                    <td>{i + 1}</td>
-                    <td>{r.username}{r.is_me && " (vous)"}</td>
-                    <td>{r.total_points_earned.toLocaleString("fr-FR")}</td>
-                    <td className="hide-sm">{r.cards}</td>
-                    <td className="hide-sm">{r.best_streak}</td>
-                    <td className="hide-sm">{r.duels_won}</td>
-                    <td>
-                      {!r.is_me && (
-                        <button className="link-btn" onClick={() => removeFriend(r)} aria-label={`Retirer ${r.username}`}>
-                          Retirer
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {friends.length === 0 && <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>}
-          </>
-        )}
-        <div className="actions">
-          <Link href="/jouer?mode=duel" className="btn primary">Défier un ami en duel</Link>
+      <div className="split-panels friends-bottom">
+        <div className="panel">
+          <h2>Mes amis</h2>
+          {!board ? (
+            <p className="muted">Chargement…</p>
+          ) : friends.length === 0 ? (
+            <p className="muted">Pas encore d&apos;amis. Partagez votre lien ou collez le leur.</p>
+          ) : (
+            <ul className="friend-list">
+              {friends.map((row) => (
+                <li key={row.user_id}>
+                  <span>{row.username}</span>
+                  <button className="link-btn" onClick={() => removeFriend(row)} aria-label={`Retirer ${row.username}`}>
+                    Retirer
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </div>
+
+        <div className="panel">
+          <h2>Classement</h2>
+          {!board ? (
+            <p className="muted">Chargement…</p>
+          ) : (
+            <>
+              <div className="leaderboard-wrap">
+                <table className="leaderboard">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Joueur</th>
+                      <th>Points</th>
+                      <th className="hide-sm">Cartes</th>
+                      <th className="hide-sm">Duels</th>
+                      <th aria-label="Actions" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {board.map((r, i) => (
+                      <tr key={r.user_id} className={r.is_me ? "me" : undefined}>
+                        <td>{i + 1}</td>
+                        <td>{r.username}{r.is_me && " (vous)"}</td>
+                        <td>{r.total_points_earned.toLocaleString("fr-FR")}</td>
+                        <td className="hide-sm">{r.cards}</td>
+                        <td className="hide-sm">{r.duels_won}</td>
+                        <td>
+                          {!r.is_me && (
+                            <button className="link-btn" onClick={() => removeFriend(r)} aria-label={`Retirer ${r.username}`}>
+                              Retirer
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {friends.length === 0 && <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>}
+            </>
+          )}
+          <div className="actions">
+            <Link href="/jouer?mode=duel" className="btn primary">Défier en duel</Link>
+          </div>
+        </div>
       </div>
     </section>
   );

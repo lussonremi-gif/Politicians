@@ -98,50 +98,50 @@ function Boosters() {
   const byParty = boosters.filter((b) => b.party_id);
 
   return (
-    <section>
-      <div className="section-head">
+    <section className="screen-fit shop">
+      <div className="section-head compact">
         <h1 className="headline">Boosters</h1>
-        <span className="tricolor" aria-hidden />
         <p className="lead">
-          Vous avez <strong>{points.toLocaleString("fr-FR")} points</strong>. Chaque carte associe une personnalité à
-          l&apos;une de ses citations : plus la phrase est culte, plus elle est rare.
+          <strong>{points.toLocaleString("fr-FR")} pts</strong> · plus la citation est culte, plus elle est rare.
         </p>
       </div>
 
       {error && <p className="notice error center">{error}</p>}
 
-      {general.length > 0 && (
-        <>
-          <h2 className="shop-title">Boosters</h2>
-          <div className="booster-grid">
-            {general.map((b) => (
-              <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
-            ))}
+      <div className="shop-scroll">
+        {general.length > 0 && (
+          <div className="shop-block">
+            <h2 className="shop-title">Classiques</h2>
+            <div className="booster-grid">
+              {general.map((b) => (
+                <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
+              ))}
+            </div>
           </div>
-        </>
-      )}
+        )}
 
-      {special.length > 0 && (
-        <>
-          <h2 className="shop-title">Éditions spéciales</h2>
-          <div className="booster-grid">
-            {special.map((b) => (
-              <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
-            ))}
+        {special.length > 0 && (
+          <div className="shop-block">
+            <h2 className="shop-title">Éditions spéciales</h2>
+            <div className="booster-grid">
+              {special.map((b) => (
+                <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
+              ))}
+            </div>
           </div>
-        </>
-      )}
+        )}
 
-      {byParty.length > 0 && (
-        <>
-          <h2 className="shop-title">Par parti</h2>
-          <div className="booster-grid">
-            {byParty.map((b) => (
-              <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
-            ))}
+        {byParty.length > 0 && (
+          <div className="shop-block">
+            <h2 className="shop-title">Par parti</h2>
+            <div className="booster-grid">
+              {byParty.map((b) => (
+                <BoosterTile key={b.slug} b={b} points={points} busy={busy} onOpen={open} />
+              ))}
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
 
       {opened && (
         <BoosterOpening

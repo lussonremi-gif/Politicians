@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthProvider";
 
 const NAV = [
-  { href: "/jouer", label: "Jouer", icon: "🎯" },
-  { href: "/boosters", label: "Boosters", icon: "🎁" },
-  { href: "/collection", label: "Collection", icon: "🃏" },
-  { href: "/amis", label: "Amis", icon: "👥" },
+  { href: "/jouer", label: "Jouer" },
+  { href: "/boosters", label: "Boosters" },
+  { href: "/collection", label: "Collection" },
+  { href: "/amis", label: "Amis" },
 ];
 
 export function Header() {
@@ -27,17 +27,17 @@ export function Header() {
       <nav className="site-nav">
         {NAV.map((item) => (
           <Link key={item.href} href={item.href} className={pathname.startsWith(item.href) ? "nav-pill active" : "nav-pill"}>
-            <span aria-hidden>{item.icon}</span> {item.label}
+            {item.label}
           </Link>
         ))}
         {profile && (
           <Link
-            href="/boosters"
-            className="points-badge"
-            title={profile.username ? `Compte ${profile.username}` : "Compte de cet appareil"}
+            href="/compte"
+            className={`points-badge ${pathname.startsWith("/compte") ? "active" : ""}`}
+            title={profile.username ? `Compte ${profile.username}` : "Mon compte"}
           >
             {profile.username && <span className="points-user">{profile.username}</span>}
-            <span aria-hidden>🪙</span> {profile.points.toLocaleString("fr-FR")}
+            <span className="points-value">{profile.points.toLocaleString("fr-FR")} pts</span>
           </Link>
         )}
       </nav>
