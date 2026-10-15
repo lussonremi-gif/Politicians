@@ -231,7 +231,7 @@ button { font-family: inherit; }
 .chip small { color: var(--muted); margin-left: 4px; }
 
 /* Boosters */
-.booster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 24px; }
+.booster-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 24px; width: 100%; }
 .booster { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; text-align: center; }
 .booster h3 { margin: 12px 0 4px; font-weight: 600; }
 .booster p { margin: 0 0 8px; font-size: 16px; }
@@ -828,7 +828,7 @@ a.ccard { text-decoration: none; color: inherit; display: block; }
   .chips { margin: 10px 0 4px; }
   .album-row { margin: 14px 0; }
   .shop-title { font-size: 20px; margin: 14px 0 0; }
-  .booster-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-top: 8px; }
+  .booster-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 8px; }
   .booster { padding: 12px; }
   .booster-pack { height: 88px; }
   .booster h3 { margin: 8px 0 2px; }
@@ -1199,30 +1199,73 @@ body:has(.screen-fit) .page {
 .screen-fit .actions { margin: 8px 0 0; }
 .screen-fit .notice { margin: 0; padding: 6px 10px; font-size: 14px; }
 
-.screen-fit.shop .shop-scroll {
-  flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px;
-  padding-bottom: 4px;
+/* Amis : grille 2×2 qui remplit l'écran, colonnes alignées */
+.friends-page.fit { min-height: 0; }
+.friends-page .friends-layout {
+  flex: 1 1 auto; min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(320px, 1.4fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
 }
-.screen-fit.shop .shop-block { flex: none; }
-.screen-fit.shop .shop-title { font-size: 15px; margin: 0 0 6px; font-weight: 800; }
-.screen-fit.shop .booster-grid {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px; margin: 0;
+.friends-page .panel { padding: 12px 14px; }
+.friends-page .panel h2 { font-size: 17px; margin: 0 0 6px; }
+.friends-page .notice { margin: 0 0 8px; padding: 6px 10px; font-size: 14px; }
+.friends-page .friend-list, .friends-page .leaderboard-wrap {
+  flex: 1; min-height: 0; overflow: auto; margin: 0;
 }
-.screen-fit.shop .booster { padding: 8px; border-radius: 14px; }
-.screen-fit.shop .booster-pack { height: 64px; border-radius: 10px; }
-.screen-fit.shop .pack-count { font-size: 26px; }
-.screen-fit.shop .pack-label { font-size: 11px; }
-.screen-fit.shop .booster h3 { font-size: 15px; margin: 6px 0 2px; }
-.screen-fit.shop .booster p { font-size: 12px; margin: 0 0 4px; line-height: 1.25; }
-.screen-fit.shop .booster .odds { font-size: 10px; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
-.screen-fit.shop .booster .btn { margin-top: 4px; padding: 6px 10px; font-size: 13px; }
+.friends-page .friend-list li { padding: 6px 0; }
+.friends-page .leaderboard { font-size: 14px; margin: 0; }
+.friends-page .leaderboard th, .friends-page .leaderboard td { padding: 5px 6px; }
+.friends-page .friends-code { grid-column: 1; grid-row: 1; }
+.friends-page .friends-add { grid-column: 2; grid-row: 1; }
+.friends-page .friends-list { grid-column: 1; grid-row: 2; min-height: 0; display: flex; flex-direction: column; }
+.friends-page .friends-board { grid-column: 2; grid-row: 2; min-height: 0; display: flex; flex-direction: column; }
+.friends-page .friends-code,
+.friends-page .friends-add {
+  display: flex; flex-direction: column; justify-content: center; min-height: 88px;
+}
+.friends-page .friends-code .inline-form,
+.friends-page .friends-add .inline-form {
+  flex-wrap: wrap; gap: 8px;
+}
+.friends-page .friend-code {
+  font-size: clamp(22px, 2.4vw, 30px); letter-spacing: 0.12em; font-weight: 700;
+}
+.friends-page .friends-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; margin-left: 8px; padding: 0 7px;
+  border-radius: 999px; background: var(--ink); color: #fff;
+  font-size: 12px; font-weight: 700; vertical-align: middle;
+}
+.friends-page .friends-board-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px;
+}
+.friends-page .friends-board-head h2 { margin: 0; }
+.friends-page .friends-board .leaderboard-wrap { flex: 1; min-height: 0; }
+.friends-page .friends-list .friend-list { flex: 1; }
+.friends-page .btn.small { padding: 6px 12px; font-size: 14px; }
+
+@media (max-width: 860px) {
+  .friends-page .friends-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(120px, 0.7fr) minmax(160px, 1fr);
+  }
+  .friends-page .friends-code,
+  .friends-page .friends-add,
+  .friends-page .friends-list,
+  .friends-page .friends-board { grid-column: 1; }
+  .friends-page .friends-code { grid-row: 1; }
+  .friends-page .friends-add { grid-row: 2; }
+  .friends-page .friends-list { grid-row: 3; }
+  .friends-page .friends-board { grid-row: 4; }
+}
 
 @media (min-width: 980px) {
   .screen-fit .split-panels {
     display: grid; grid-template-columns: minmax(200px, 0.65fr) minmax(340px, 1.35fr);
   }
-  .screen-fit .friends-top { grid-template-columns: 1fr 1fr; }
 }
 
 /* Badges de carte */
@@ -1494,12 +1537,20 @@ body { height: 100dvh; min-height: 0; display: flex; flex-direction: column; }
 .pager-btn:disabled { opacity: 0.3; cursor: default; }
 .pager-count { font-weight: 800; min-width: 60px; text-align: center; }
 
-/* Boutique : quatre boosters, un par rareté */
-.shop .rarity-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 260px)); justify-content: center; align-content: center; gap: 18px; margin: 0; }
-.rarity-booster { display: flex; flex-direction: column; align-items: stretch; text-align: center; padding: 14px; gap: 8px; }
-.rarity-booster h3 { margin: 2px 0 0; font-size: 22px; }
+/* Boutique : quatre boosters, un par rareté — pleine largeur, colonnes égales */
+.shop .rarity-grid {
+  flex: 1 1 auto; min-height: 0; width: 100%;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: center; gap: 16px; margin: 0;
+}
+.rarity-booster {
+  display: flex; flex-direction: column; align-items: stretch; text-align: center;
+  padding: 16px; gap: 8px; width: 100%; min-width: 0; box-sizing: border-box;
+}
+.rarity-booster h3 { margin: 2px 0 0; font-size: clamp(18px, 1.6vw, 22px); }
+.rarity-booster .btn { width: 100%; }
 .rarity-booster .booster-pack {
-  height: 150px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 14px; overflow: hidden; color: #fff;
+  height: clamp(120px, 18vh, 160px); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; border-radius: 14px; overflow: hidden; color: #fff;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.3), transparent 45%), radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 75%, #fff 25%), color-mix(in srgb, var(--accent) 65%, #000 45%) 80%) !important;
 }
 .rarity-booster .booster-pack::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%); background-size: 300% 100%; animation: shine 3.2s ease-in-out infinite; }

@@ -92,25 +92,29 @@ function Friends() {
   const friends = (board ?? []).filter((row) => !row.is_me);
 
   return (
-    <section className="screen-fit">
-      <div className="section-head compact">
+    <section className="fit friends-page">
+      <div className="fit-head">
         <h1 className="headline">Amis</h1>
-        <p className="lead">Code, invitations et classement.</p>
+        <p className="collection-count">Code, invitations et classement</p>
       </div>
 
       {message && <p className={`notice center ${message.kind === "error" ? "error" : "success"}`}>{message.text}</p>}
 
-      <div className="panel-grid friends-top">
-        <div className="panel">
+      <div className="friends-layout">
+        <div className="panel friends-code">
           <h2>Mon code ami</h2>
           <div className="inline-form">
             <span className="friend-code">{profile.friend_code}</span>
-            <button className="btn" type="button" onClick={() => copy("code")}>{copied === "code" ? "Copié !" : "Copier"}</button>
-            <button className="btn" type="button" onClick={() => copy("link")}>{copied === "link" ? "Lien copié !" : "Lien"}</button>
+            <button className="btn" type="button" onClick={() => copy("code")}>
+              {copied === "code" ? "Copié !" : "Copier"}
+            </button>
+            <button className="btn" type="button" onClick={() => copy("link")}>
+              {copied === "link" ? "Lien copié !" : "Lien"}
+            </button>
           </div>
         </div>
 
-        <form className="panel" onSubmit={addFriend}>
+        <form className="panel friends-add" onSubmit={addFriend}>
           <h2>Ajouter un ami</h2>
           <div className="inline-form">
             <input
@@ -125,11 +129,9 @@ function Friends() {
             </button>
           </div>
         </form>
-      </div>
 
-      <div className="split-panels friends-bottom">
-        <div className="panel">
-          <h2>Mes amis</h2>
+        <div className="panel friends-list">
+          <h2>Mes amis {friends.length > 0 && <span className="friends-count">{friends.length}</span>}</h2>
           {!board ? (
             <p className="muted">Chargement…</p>
           ) : friends.length === 0 ? (
@@ -148,50 +150,55 @@ function Friends() {
           )}
         </div>
 
-        <div className="panel">
-          <h2>Classement</h2>
+        <div className="panel friends-board">
+          <div className="friends-board-head">
+            <h2>Classement</h2>
+            <Link href="/jouer?mode=duel" className="btn primary small">
+              Défier en duel
+            </Link>
+          </div>
           {!board ? (
             <p className="muted">Chargement…</p>
           ) : (
-            <>
-              <div className="leaderboard-wrap">
-                <table className="leaderboard">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Joueur</th>
-                      <th>Points</th>
-                      <th className="hide-sm">Cartes</th>
-                      <th className="hide-sm">Duels</th>
-                      <th aria-label="Actions" />
+            <div className="leaderboard-wrap">
+              <table className="leaderboard">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Joueur</th>
+                    <th>Points</th>
+                    <th className="hide-sm">Cartes</th>
+                    <th className="hide-sm">Duels</th>
+                    <th aria-label="Actions" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {board.map((r, i) => (
+                    <tr key={r.user_id} className={r.is_me ? "me" : undefined}>
+                      <td>{i + 1}</td>
+                      <td>
+                        {r.username}
+                        {r.is_me && " (vous)"}
+                      </td>
+                      <td>{r.total_points_earned.toLocaleString("fr-FR")}</td>
+                      <td className="hide-sm">{r.cards}</td>
+                      <td className="hide-sm">{r.duels_won}</td>
+                      <td>
+                        {!r.is_me && (
+                          <button className="link-btn" onClick={() => removeFriend(r)} aria-label={`Retirer ${r.username}`}>
+                            Retirer
+                          </button>
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {board.map((r, i) => (
-                      <tr key={r.user_id} className={r.is_me ? "me" : undefined}>
-                        <td>{i + 1}</td>
-                        <td>{r.username}{r.is_me && " (vous)"}</td>
-                        <td>{r.total_points_earned.toLocaleString("fr-FR")}</td>
-                        <td className="hide-sm">{r.cards}</td>
-                        <td className="hide-sm">{r.duels_won}</td>
-                        <td>
-                          {!r.is_me && (
-                            <button className="link-btn" onClick={() => removeFriend(r)} aria-label={`Retirer ${r.username}`}>
-                              Retirer
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {friends.length === 0 && <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>}
-            </>
+                  ))}
+                </tbody>
+              </table>
+              {friends.length === 0 && (
+                <p className="muted">Le classement se remplit dès qu&apos;un ami est ajouté.</p>
+              )}
+            </div>
           )}
-          <div className="actions">
-            <Link href="/jouer?mode=duel" className="btn primary">Défier en duel</Link>
-          </div>
         </div>
       </div>
     </section>
