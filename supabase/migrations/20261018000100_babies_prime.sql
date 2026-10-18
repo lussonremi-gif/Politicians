@@ -2,7 +2,7 @@
 --
 -- - « babies » se place au-dessus de légendaire. Une seule carte pour l'instant :
 --   Marine Tondelier Prime.
--- - Elle ne se trouve que dans le booster le moins rare (Booster Commun) : 3 % de chances
+-- - Elle ne se trouve que dans le booster le moins rare (Booster Commun) : 3 % de chances (100 % depuis 20261018000200)
 --   par booster, en remplacement de la dernière carte (celle qui est révélée en dernier).
 -- - Elle n'apparaît jamais ailleurs : ni dans les autres boosters, ni dans le quiz, ni comme
 --   récompense de duel.

@@ -58,7 +58,7 @@ function BoosterTile({
         </p>
         {b.slug === "rarete-commune" && (
           <p className="prime-teaser">
-            <span aria-hidden>✦</span> Une carte Prime « Babies » s&apos;y cache (3 %)
+            <span aria-hidden>✦</span> Carte Prime « Babies » garantie !
           </p>
         )}
         <ul className="odds-bars" aria-label="Probabilités par carte">
