@@ -115,6 +115,18 @@ export function whoosh() {
   noise(0, 0.35, 0.09, 600, 5000);
 }
 
+/** Écran « PRIME » (carte Babies) : battements de cœur, montée scintillante, accord final. */
+export function prime() {
+  [0, 0.42, 0.84, 1.18, 1.46].forEach((t, i) => {
+    tone("sine", 95, 45, t, 0.28, 0.45 - i * 0.03);
+    tone("sine", 70, 40, t + 0.14, 0.22, 0.3);
+  });
+  noise(0.2, 1.6, 0.06, 800, 9000, true);
+  [784, 988, 1175, 1568, 1976, 2349].forEach((f, i) => tone("triangle", f, f, 1.7 + i * 0.09, 1.4, 0.045));
+  tone("sawtooth", 131, 131, 1.75, 1.8, 0.05);
+  tone("sawtooth", 196, 196, 1.75, 1.8, 0.04);
+}
+
 /** Petit clic de machine à écrire. */
 export function tick() {
   tone("square", 1700 + Math.random() * 400, 1200, 0, 0.025, 0.012);
@@ -126,7 +138,7 @@ export function reveal(rank: number) {
   noise(0, 0.6 + rank * 0.1, 0.12 + rank * 0.04, 6000, 400);
   if (rank >= 1) {
     // Accord scintillant
-    const notes = rank >= 3 ? [523, 659, 784, 1047, 1319, 1568] : rank >= 2 ? [523, 659, 784, 1047] : [659, 784, 988];
+    const notes = rank >= 4 ? [523, 659, 784, 1047, 1319, 1568, 2093, 2637] : rank >= 3 ? [523, 659, 784, 1047, 1319, 1568] : rank >= 2 ? [523, 659, 784, 1047] : [659, 784, 988];
     notes.forEach((f, i) => tone("triangle", f, f, 0.05 + i * 0.07, 1.2 + rank * 0.2, 0.05));
   }
   if (rank >= 3) {

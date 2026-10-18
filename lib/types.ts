@@ -1,16 +1,18 @@
 /** Quatre niveaux de rareté, selon le retentissement de la citation (légendaire au sommet). */
-export type Rarity = "common" | "rare" | "epic" | "legendary";
+export type Rarity = "common" | "rare" | "epic" | "legendary" | "babies";
 
-export const RARITIES: Rarity[] = ["common", "rare", "epic", "legendary"];
+// « babies » : catégorie spéciale (cartes Prime), au-dessus de légendaire
+export const RARITIES: Rarity[] = ["common", "rare", "epic", "legendary", "babies"];
 
 export const RARITY_LABEL: Record<Rarity, string> = {
   common: "Commune",
   rare: "Rare",
   epic: "Épique",
   legendary: "Légendaire",
+  babies: "Babies",
 };
 
-export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3 };
+export const RARITY_RANK: Record<Rarity, number> = { common: 0, rare: 1, epic: 2, legendary: 3, babies: 4 };
 
 export type Profile = {
   id: string;

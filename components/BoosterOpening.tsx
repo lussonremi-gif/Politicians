@@ -26,13 +26,17 @@ type Phase = "pack" | "charging" | "burst" | "reveal" | "summary";
 // Étapes d'une carte
 const PARTY = 0;
 const ROLE = 1;
-const CARD = 2;
+const PRIME = 2; // uniquement pour une carte « Babies » : l'écran « PRIME » avant la carte
+const CARD = 3;
 
 // Durée de la charge du booster selon sa meilleure carte
-const CHARGE_MS: Record<Rarity, number> = { common: 1200, rare: 1900, epic: 2600, legendary: 3600 };
+const CHARGE_MS: Record<Rarity, number> = { common: 1200, rare: 1900, epic: 2600, legendary: 3600, babies: 4600 };
 
 // Temps passé sur chaque indice (parti, poste), entrée comprise
-const HOLD_MS: Record<Rarity, number> = { common: 1700, rare: 2000, epic: 2300, legendary: 2700 };
+const HOLD_MS: Record<Rarity, number> = { common: 1700, rare: 2000, epic: 2300, legendary: 2700, babies: 2900 };
+
+// Écran « PRIME » d'une carte Babies : le temps de faire monter la pression
+const PRIME_MS = 3600;
 
 // Durée de la sortie d'un indice avant l'entrée du suivant
 const LEAVE_MS = 380;
@@ -42,9 +46,11 @@ const HINT: Record<Rarity, string> = {
   rare: "Ça brille…",
   epic: "Ça brille très fort…",
   legendary: "Une phrase historique arrive…",
+  babies: "Attends… c'est quoi cette lumière ?!",
 };
 
-const isLegendary = (r: Rarity) => r === "legendary";
+const isBabies = (r: Rarity) => r === "babies";
+const hasFireworks = (r: Rarity) => r === "legendary" || r === "babies";
 
 function bestRarity(cards: OpenedCard[]): Rarity {
   return cards.reduce<Rarity>((b, c) => (RARITY_RANK[c.rarity] > RARITY_RANK[b] ? c.rarity : b), "common");
@@ -115,7 +121,7 @@ function Stage({ pulse }: { pulse: string }) {
 
 function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
   const rank = RARITY_RANK[rarity];
-  const count = [0, 24, 40, 80][rank];
+  const count = [0, 24, 40, 80, 120][rank];
   const parts = useMemo(() => {
     const rand = seeded(seed);
     return Array.from({ length: count }, (_, i) => ({
@@ -145,16 +151,17 @@ function Particles({ rarity, seed }: { rarity: Rarity; seed: number }) {
 }
 
 /** Feux d'artifice plein écran (légendaire). */
-function Fireworks({ seed }: { seed: number }) {
+function Fireworks({ seed, babies = false }: { seed: number; babies?: boolean }) {
   const bursts = useMemo(() => {
     const rand = seeded(seed + 7);
-    return Array.from({ length: 7 }, (_, i) => ({
+    const palette = babies ? ["#ff7ad9", "#7ae7ff", "#fff27a", "#b98cff", "#ffffff", "#7affb2"] : ["#ffd66b", "#fff1b8", "#ffb347", "#ffffff"];
+    return Array.from({ length: babies ? 12 : 7 }, (_, i) => ({
       x: 8 + rand() * 84,
-      y: 8 + rand() * 50,
-      delay: 0.25 + i * 0.3 + rand() * 0.2,
-      hue: ["#ffd66b", "#fff1b8", "#ffb347", "#ffffff"][i % 4],
+      y: 8 + rand() * 60,
+      delay: 0.25 + i * (babies ? 0.38 : 0.3) + rand() * 0.2,
+      hue: palette[i % palette.length],
     }));
-  }, [seed]);
+  }, [seed, babies]);
   return (
     <div className="bo-fireworks" aria-hidden>
       {bursts.map((b, i) => (
@@ -162,6 +169,43 @@ function Fireworks({ seed }: { seed: number }) {
           {Array.from({ length: 12 }, (_, j) => (
             <i key={j} style={{ ["--r" as string]: `${j * 30}deg`, animationDelay: `${b.delay}s` }} />
           ))}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Pluie de cœurs et d'étoiles pastel (carte Babies). */
+function BabiesRain({ seed }: { seed: number }) {
+  const drops = useMemo(() => {
+    const rand = seeded(seed + 31);
+    const glyphs = ["♥", "★", "✦", "♥", "✧", "♥"];
+    const colors = ["#ff7ad9", "#7ae7ff", "#fff27a", "#b98cff", "#ffffff", "#7affb2"];
+    return Array.from({ length: 42 }, (_, i) => ({
+      left: rand() * 100,
+      delay: rand() * 2.4,
+      duration: 2.6 + rand() * 2.4,
+      size: 14 + rand() * 22,
+      drift: (rand() - 0.5) * 120,
+      glyph: glyphs[i % glyphs.length],
+      color: colors[Math.floor(rand() * colors.length)],
+    }));
+  }, [seed]);
+  return (
+    <div className="babies-rain" aria-hidden>
+      {drops.map((d, i) => (
+        <span
+          key={i}
+          style={{
+            left: `${d.left}%`,
+            fontSize: d.size,
+            color: d.color,
+            animationDelay: `${d.delay}s`,
+            animationDuration: `${d.duration}s`,
+            ["--drift" as string]: `${d.drift}px`,
+          }}
+        >
+          {d.glyph}
         </span>
       ))}
     </div>
@@ -268,21 +312,25 @@ export function BoosterOpening({
   /** L'indice courant sort en fondu, puis le suivant entre (le poste est sauté s'il n'y en a pas). */
   const nextStep = useCallback(() => {
     if (!current || leaving) return;
-    const next = step === PARTY && !role ? CARD : step + 1;
+    const babies = isBabies(current.rarity);
+    let next = step + 1;
+    if (step === PARTY && !role) next = babies ? PRIME : CARD;
+    if (step === ROLE && !babies) next = CARD;
     setLeaving(true);
     sfx.whoosh();
     later(() => {
       setLeaving(false);
       setStep(next);
       if (next === CARD) sfx.reveal(RARITY_RANK[current.rarity]);
+      else if (next === PRIME) sfx.prime();
       else sfx.thud();
-    }, LEAVE_MS);
+    }, next === PRIME ? 900 : LEAVE_MS);
   }, [current, step, role, leaving, later]);
 
   // Enchaînement automatique des indices
   useEffect(() => {
     if (phase !== "reveal" || !current || step >= CARD || leaving) return;
-    const t = setTimeout(nextStep, HOLD_MS[current.rarity]);
+    const t = setTimeout(nextStep, step === PRIME ? PRIME_MS : HOLD_MS[current.rarity]);
     return () => clearTimeout(t);
   }, [phase, step, current, leaving, nextStep]);
 
@@ -382,10 +430,12 @@ export function BoosterOpening({
       )}
 
       {revealed && <div className={`bo-flash ${current.rarity}`} key={`flash-${index}`} aria-hidden />}
-      {revealed && isLegendary(current.rarity) && <Fireworks key={`fw-${index}`} seed={index + 1} />}
+      {revealed && hasFireworks(current.rarity) && <Fireworks key={`fw-${index}`} seed={index + 1} babies={isBabies(current.rarity)} />}
+      {revealed && isBabies(current.rarity) && <BabiesRain key={`rain-${index}`} seed={index + 1} />}
+      {phase === "reveal" && current && isBabies(current.rarity) && leaving && step === ROLE && <div className="prime-blackout" aria-hidden />}
 
       {phase === "reveal" && current && (
-        <div className={`bo-center wo ${revealed && RARITY_RANK[current.rarity] >= 2 ? "quake" : ""}`}>
+        <div className={`bo-center wo ${revealed && RARITY_RANK[current.rarity] >= 2 ? "quake" : ""} ${step === PRIME && !leaving ? "quake-long" : ""}`}>
           <p className="bo-counter">
             Carte {index + 1}/{ordered.length}
           </p>
@@ -413,12 +463,30 @@ export function BoosterOpening({
               </div>
             )}
 
+            {step === PRIME && (
+              <div className="wo-clue wo-prime">
+                <span className="prime-ring" aria-hidden />
+                <span className="prime-ring late" aria-hidden />
+                <span className="prime-kicker">Carte ultra rare</span>
+                <strong className="prime-word">
+                  {"PRIME".split("").map((ch, i) => (
+                    <span key={i} style={{ animationDelay: `${0.15 + i * 0.12}s` }}>
+                      {ch}
+                    </span>
+                  ))}
+                </strong>
+                <span className="prime-babies">Babies</span>
+              </div>
+            )}
+
             {step === CARD && (
               <div className={`bo-card enter-${current.rarity}`} onClick={(e) => e.stopPropagation()}>
                 <span className="wo-shockwave" aria-hidden />
                 <Particles rarity={current.rarity} seed={index + 1} />
                 <CollectibleCard card={current} />
-                <span className={`bo-banner ${current.rarity}`}>{RARITY_LABEL[current.rarity]}</span>
+                <span className={`bo-banner ${current.rarity}`}>
+                  {isBabies(current.rarity) ? "Carte Prime · Babies" : RARITY_LABEL[current.rarity]}
+                </span>
                 {typeof current.new === "boolean" && (
                   <span className={`bo-own ${current.new ? "is-new" : "is-dupe"}`}>
                     {current.new ? "Nouvelle carte" : "Déjà en collection"}

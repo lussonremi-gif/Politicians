@@ -11,7 +11,7 @@ import { RARITIES, RARITY_LABEL, type BoosterType, type OpenedCard, type Rarity 
 type Opened = { booster: BoosterType; cards: OpenedCard[] };
 
 // Couleur et rareté mise en avant de chaque booster
-const RARITY_ACCENT: Record<Rarity, string> = { common: "#6b7280", rare: "#2f5bd3", epic: "#7b3fc4", legendary: "#c9971d" };
+const RARITY_ACCENT: Record<Rarity, string> = { common: "#6b7280", rare: "#2f5bd3", epic: "#7b3fc4", legendary: "#c9971d", babies: "#ff7ad9" };
 
 function boosterRarity(b: BoosterType): Rarity {
   if (b.guarantee) return asRarity(b.guarantee);
@@ -26,7 +26,7 @@ function boosterAccent(b: BoosterType) {
 /** Probabilités par carte, ramenées aux quatre raretés. */
 function odds(b: BoosterType) {
   const raw = (b.weights ?? {}) as Record<string, number>;
-  const folded: Record<Rarity, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
+  const folded: Record<Rarity, number> = { common: 0, rare: 0, epic: 0, legendary: 0, babies: 0 };
   for (const [k, v] of Object.entries(raw)) folded[asRarity(k)] += v;
   return RARITIES.filter((r) => folded[r] > 0).map((r) => ({ r, p: folded[r] }));
 }
@@ -56,6 +56,11 @@ function BoosterTile({
         <p className="booster-guarantee">
           {b.guarantee ? `Au moins 1 ${RARITY_LABEL[rarity].toLowerCase()}` : "Pour compléter sa collection"}
         </p>
+        {b.slug === "rarete-commune" && (
+          <p className="prime-teaser">
+            <span aria-hidden>✦</span> Une carte Prime « Babies » s&apos;y cache (3 %)
+          </p>
+        )}
         <ul className="odds-bars" aria-label="Probabilités par carte">
           {odds(b).map(({ r, p }) => (
             <li key={r} className={`odd rarity-${r}`}>

@@ -6,7 +6,7 @@ import { presentCard } from "@/lib/cardArt";
 import { Photo } from "./Photo";
 import { RARITY_LABEL, formatDate, type GameCard, type Rarity } from "@/lib/types";
 
-const RARITY_GEMS: Record<Rarity, number> = { common: 1, rare: 2, epic: 3, legendary: 4 };
+const RARITY_GEMS: Record<Rarity, number> = { common: 1, rare: 2, epic: 3, legendary: 4, babies: 5 };
 
 /**
  * Carte à collectionner : la photo de la citation en grand et la phrase au recto ;
@@ -46,7 +46,7 @@ export function CollectibleCard({ card, locked = false }: { card: GameCard; lock
                 <i key={i} />
               ))}
             </span>
-            {RARITY_LABEL[shown.rarity]}
+            {shown.rarity === "babies" ? "Prime · Babies" : RARITY_LABEL[shown.rarity]}
           </span>
           {shown.party_short && <span className="ccard-party">{shown.party_short}</span>}
         </div>
