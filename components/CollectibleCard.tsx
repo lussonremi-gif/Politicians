@@ -34,6 +34,19 @@ export function CollectibleCard({ card, locked = false }: { card: GameCard; lock
         <Photo src={shown.image_url} fallbackSrc={shown.fallback_image_url} focus={shown.image_focus} name={shown.name} />
         <div className="ccard-foil" aria-hidden />
         <div className="ccard-art-fade" aria-hidden />
+        {shown.rarity === "babies" && !locked && (
+          // Carte Prime : prisme holographique, étoiles qui scintillent et liseré irisé
+          <div className="ccard-prime-fx" aria-hidden>
+            <span className="ccard-prism" />
+            <span className="ccard-inner-rim" />
+            {Array.from({ length: 7 }, (_, i) => (
+              <i key={i} className="ccard-twinkle">
+                ✦
+              </i>
+            ))}
+            <span className="ccard-prime-mark">PRIME</span>
+          </div>
+        )}
         {locked && (
           <div className="ccard-locked-hint" aria-hidden>
             <span>Non obtenue</span>

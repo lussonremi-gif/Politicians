@@ -2037,3 +2037,68 @@ body:has(.shop.fit) .page { overflow: hidden; }
   .rarity-tabs { flex-wrap: wrap; row-gap: 5px; }
   .prime-teaser { font-size: 10px; padding: 3px 6px; line-height: 1.2; }
 }
+
+/* Carte Prime « Babies » : encore plus belle */
+.ccard.rarity-babies { --rim: 9px; }
+.ccard.rarity-babies .ccard-art { margin: 5px 5px 0; border-radius: 14px 14px 8px 8px; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9), inset 0 0 34px rgba(255, 122, 217, 0.45); }
+.ccard.rarity-babies .ccard-art > img { filter: saturate(1.15) contrast(1.05) brightness(1.04); }
+.ccard.rarity-babies .ccard-art-fade { background: linear-gradient(180deg, rgba(42, 15, 58, 0.35) 0%, transparent 22%, transparent 55%, rgba(42, 15, 58, 0.95) 100%); }
+.ccard-prime-fx { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; border-radius: inherit; }
+/* Prisme : fines lignes irisées qui glissent sur la photo */
+.ccard-prism {
+  position: absolute; inset: -20%; opacity: 0.35; mix-blend-mode: soft-light;
+  background:
+    repeating-linear-gradient(125deg, rgba(255, 122, 217, 0.9) 0 3px, rgba(255, 242, 122, 0.9) 3px 6px, rgba(122, 255, 178, 0.9) 6px 9px, rgba(122, 231, 255, 0.9) 9px 12px, rgba(185, 140, 255, 0.9) 12px 15px);
+  animation: prismSlide 6s linear infinite;
+}
+@keyframes prismSlide { from { transform: translateX(-12%); } to { transform: translateX(12%); } }
+/* Liseré intérieur irisé autour de la photo */
+.ccard-inner-rim {
+  position: absolute; inset: 5px; border-radius: 10px; padding: 2px;
+  background: linear-gradient(120deg, #ff9ad5, #fff27a, #7affb2, #7ae7ff, #b98cff, #ff9ad5); background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: rainbowSweep 3s linear infinite; opacity: 0.9;
+}
+/* Étoiles qui scintillent */
+.ccard-twinkle { position: absolute; font-style: normal; color: #fff; text-shadow: 0 0 6px #fff, 0 0 12px #ff9ad5; opacity: 0; animation: twinkle 2.4s ease-in-out infinite; }
+.ccard-twinkle:nth-of-type(1) { left: 12%; top: 22%; font-size: 14px; animation-delay: 0s; }
+.ccard-twinkle:nth-of-type(2) { right: 14%; top: 30%; font-size: 18px; animation-delay: 0.5s; text-shadow: 0 0 6px #fff, 0 0 12px #7ae7ff; }
+.ccard-twinkle:nth-of-type(3) { left: 20%; top: 52%; font-size: 10px; animation-delay: 1.1s; }
+.ccard-twinkle:nth-of-type(4) { right: 22%; top: 60%; font-size: 13px; animation-delay: 1.6s; text-shadow: 0 0 6px #fff, 0 0 12px #fff27a; }
+.ccard-twinkle:nth-of-type(5) { left: 46%; top: 14%; font-size: 11px; animation-delay: 0.8s; }
+.ccard-twinkle:nth-of-type(6) { left: 8%; top: 70%; font-size: 16px; animation-delay: 2s; text-shadow: 0 0 6px #fff, 0 0 12px #b98cff; }
+.ccard-twinkle:nth-of-type(7) { right: 8%; top: 12%; font-size: 12px; animation-delay: 1.3s; }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
+/* Filigrane PRIME vertical */
+.ccard-prime-mark {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%) rotate(90deg); transform-origin: center;
+  font-weight: 800; font-size: 13px; letter-spacing: 0.55em; color: rgba(255, 255, 255, 0.75);
+  text-shadow: 0 0 8px rgba(255, 122, 217, 0.9); right: -14px;
+}
+/* Nom en dégradé, citation sur fond nacré */
+.ccard.rarity-babies .ccard-nameplate strong {
+  background: linear-gradient(90deg, #fff, #ffd1ef, #d1fbff, #fff7c2, #fff); background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+  text-shadow: none; animation: rainbowSweep 4s linear infinite;
+}
+.ccard.rarity-babies .ccard-quote {
+  margin: 8px 9px 10px; padding: 7px 9px; border-radius: 10px; color: #fff;
+  background: linear-gradient(120deg, rgba(255, 154, 213, 0.28), rgba(122, 231, 255, 0.22), rgba(255, 242, 122, 0.2));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.ccard.rarity-babies .ccard-back { background: linear-gradient(160deg, #3a1450, #2a0f3a 55%, #1b2a4a) padding-box, var(--frame) border-box; }
+@media (max-width: 720px), (pointer: coarse) {
+  .ccard-prism { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccard-prism, .ccard-inner-rim, .ccard-twinkle { animation: none; }
+}
+/* Prisme plus subtil : un reflet arc-en-ciel qui balaie la photo, sans la masquer */
+.ccard-prism {
+  inset: 0; opacity: 0.6; mix-blend-mode: overlay;
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 154, 213, 0.75) 38%, rgba(122, 231, 255, 0.75) 47%, rgba(255, 242, 122, 0.75) 56%, transparent 70%);
+  background-size: 260% 100%; animation: prismSweep 3.6s ease-in-out infinite;
+}
+@keyframes prismSweep { 0% { background-position: 120% 0; } 100% { background-position: -40% 0; } }
+.ccard.rarity-babies .ccard-quote { padding: 5px 7px; margin: 7px 8px 9px; }
